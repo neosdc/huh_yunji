@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="구구단을 재미있게 익히는 초등학생용 웹 게임">
+<title>구구단 놀이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+/* 방안지 위에 한 줄짜리 컬럼. 홈의 주인공은 8×9 구구단 표이고, 단마다 색이 있어 익힐수록 칸이 채워진다. */
+:root {
+  --paper: #EAF1FB;
+  --paper-2: #DCE6F5;
+  --grid-line: #D3DFF1;
+  --card: #FFFFFF;
+  --ink: #1C2745;
+  --ink-2: #4A5879;
+  --edge: #1C2745;
+  --edge-shadow: #1C2745;
+  --on-solid: #1C2745;
+  --good: #1B7F46;
+  --bad: #C2372B;
+  --gold: #FFC93C;
+  --focus: #2F5BFF;
+  --d2: #FF7F6B;
+  --d3: #FFB347;
+  --d4: #F5D547;
+  --d5: #8FD16B;
+  --d6: #4FC7A8;
+  --d7: #5BB8F0;
+  --d8: #9A98F5;
+  --d9: #E58ADB;
+  --h: var(--d2);
+  --font-d: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-b: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10172B; --paper-2: #1B2543; --grid-line: #17203A; --card: #1E2848;
+    --ink: #EAF0FF; --ink-2: #A8B5D6; --edge: #8D9BC6; --edge-shadow: #050816;
+    --good: #5FD38C; --bad: #FF8A7D; --focus: #8DB2FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10172B; --paper-2: #1B2543; --grid-line: #17203A; --card: #1E2848;
+  --ink: #EAF0FF; --ink-2: #A8B5D6; --edge: #8D9BC6; --edge-shadow: #050816;
+  --good: #5FD38C; --bad: #FF8A7D; --focus: #8DB2FF;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: var(--font-b);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-inline: 16px;
+  padding-block: 16px 48px;
+}
+.wrap { max-width: 36rem; margin-inline: auto; }
+h1, h2, h3, .btn, .chip, .choice, .key, .rowhead, .cell, .eq, .q, .stats b {
+  font-family: var(--font-d);
+  font-weight: 400;
+}
+h1 { font-size: 2.2rem; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.5rem; margin: 0; line-height: 1.2; }
+h3 { font-size: 1.15rem; margin: 0 0 .5rem; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button:disabled { opacity: .4; cursor: default; }
+
+.top { display: flex; align-items: center; gap: .75rem; justify-content: space-between; margin-bottom: 1rem; }
+.top .title { flex: 1; text-align: center; }
+.sub { color: var(--ink-2); margin-top: .35rem; }
+
+.btn {
+  font-size: 1.15rem;
+  padding: .6rem 1.1rem;
+  background: var(--card);
+  border: 2.5px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--edge-shadow);
+  transition: transform .08s, box-shadow .08s;
+  user-select: none;
+}
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.btn.primary { background: var(--h); color: var(--on-solid); }
+.btn.small { font-size: 1rem; padding: .4rem .8rem; }
+.btn.wide { width: 100%; }
+.icon-btn {
+  width: 2.8rem; height: 2.8rem; flex: none;
+  display: grid; place-items: center;
+  background: var(--card); border: 2.5px solid var(--edge); border-radius: 50%;
+  box-shadow: 0 3px 0 var(--edge-shadow);
+}
+.icon-btn[aria-pressed="false"] { color: var(--ink-2); }
+
+.card {
+  background: var(--card);
+  border: 2.5px solid var(--edge);
+  border-radius: 18px;
+  box-shadow: 0 5px 0 var(--edge-shadow);
+  padding: 1rem;
+}
+
+/* 홈 */
+.stats { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.stat {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .2rem .8rem; background: var(--card);
+  border: 2px solid var(--edge); border-radius: 999px; font-size: .95rem;
+}
+.stat b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.board-card { padding: .75rem; }
+.board {
+  display: grid;
+  grid-template-columns: 2.9rem repeat(9, minmax(0, 1fr));
+  gap: 3px;
+}
+.colhead { text-align: center; font-size: .8rem; color: var(--ink-2); align-self: end; padding-bottom: 2px; font-variant-numeric: tabular-nums; }
+.rowhead {
+  background: var(--c); color: var(--on-solid);
+  border: 2px solid var(--edge); border-radius: 10px;
+  font-size: .95rem; padding: 0;
+}
+.rowhead[aria-pressed="true"] { box-shadow: 0 3px 0 var(--edge-shadow); transform: translateY(-1px); }
+.cell {
+  aspect-ratio: 1;
+  display: grid; place-items: center;
+  border: 2px solid transparent; border-radius: 8px;
+  background: var(--paper-2); color: var(--ink);
+  font-size: clamp(.78rem, 3.4vw, 1.05rem);
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+.cell.insel { border-color: var(--edge); }
+.cell.l1 { background: color-mix(in srgb, var(--c) 32%, var(--card)); }
+.cell.l2 { background: color-mix(in srgb, var(--c) 64%, var(--card)); }
+.cell.l3 { background: var(--c); color: var(--on-solid); }
+.cell.l3::after { content: '★'; position: absolute; top: 0; right: 3px; font-size: .5rem; line-height: 1; padding-top: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin: .8rem 0 1rem; font-size: .85rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.legend .cell { width: 1.2rem; font-size: 0; border-radius: 6px; }
+.panel { display: flex; flex-direction: column; gap: .8rem; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.panel-head h2 { background: var(--h); color: var(--on-solid); padding: .1rem .7rem; border: 2.5px solid var(--edge); border-radius: 12px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.challenge { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.note { color: var(--ink-2); font-size: .9rem; text-align: center; }
+
+/* 배우기 */
+.eq-card { text-align: center; }
+.eq { display: flex; justify-content: center; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: clamp(2.3rem, 12vw, 3.4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.eq .op { color: var(--ink-2); }
+.eq .ans { background: var(--h); color: var(--on-solid); padding: 0 .35em; border: 2.5px solid var(--edge); border-radius: 14px; }
+.read { margin-top: .5rem; color: var(--ink-2); font-size: 1.05rem; }
+.nav { display: grid; grid-template-columns: 1fr auto 1.4fr; gap: .7rem; margin: 1rem 0; }
+.viz { display: flex; gap: 1.25rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+.dotgrid { display: grid; grid-template-columns: repeat(var(--cols), 1.35rem); gap: .28rem; }
+.dot {
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  background: var(--h); border: 1.5px solid var(--edge);
+  animation: pop .3s both; animation-delay: calc(var(--r) * 55ms);
+}
+.dot.alt { background: color-mix(in srgb, var(--h) 45%, var(--card)); }
+@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.vcap { font-size: 1.05rem; }
+.vcap .big { font-family: var(--font-d); font-size: 1.6rem; line-height: 1.25; }
+.skip, .tip { margin-top: 1rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip {
+  min-width: 2.7rem; padding: .3rem .6rem;
+  background: var(--card); border: 2px solid var(--edge); border-radius: 10px;
+  font-size: 1.05rem; text-align: center; font-variant-numeric: tabular-nums;
+}
+.chip.cur { background: var(--h); color: var(--on-solid); }
+.chip.future { border-style: dashed; color: var(--ink-2); }
+span.chip { cursor: default; }
+.tip p:last-child { margin-top: .2rem; }
+
+/* 문제 */
+.prog { flex: 1; height: 1rem; border: 2.5px solid var(--edge); border-radius: 999px; background: var(--card); overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--h); transition: width .3s; }
+.meta { display: flex; justify-content: space-between; color: var(--ink-2); font-size: .95rem; margin-bottom: .6rem; font-variant-numeric: tabular-nums; }
+.streak { visibility: hidden; color: var(--ink); }
+.streak.on { visibility: visible; }
+.q-card { text-align: center; padding-block: 1.4rem; }
+.q { display: flex; justify-content: center; align-items: center; gap: .6rem; flex-wrap: wrap; font-size: clamp(2.6rem, 14vw, 4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.q .op { color: var(--ink-2); }
+.blank { min-width: 1.6em; padding: 0 .25em; border-bottom: 4px solid var(--edge); }
+.blank.good { color: var(--good); border-color: var(--good); }
+.blank.bad { color: var(--bad); border-color: var(--bad); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: 1rem; }
+.choice {
+  position: relative; min-height: 4.4rem; font-size: 2.1rem;
+  background: var(--card); border: 2.5px solid var(--edge); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--edge-shadow); font-variant-numeric: tabular-nums;
+  transition: transform .08s, box-shadow .08s;
+}
+.choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.choice kbd { position: absolute; top: .3rem; left: .5rem; font: .75rem var(--font-b); color: var(--ink-2); }
+.choice.good { background: var(--good); color: var(--card); border-color: var(--good); opacity: 1; }
+.choice.bad { background: var(--bad); color: var(--card); border-color: var(--bad); opacity: 1; }
+.choice:disabled { opacity: .55; }
+@media (hover: none) { .choice kbd { display: none; } }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-top: 1rem; }
+.key {
+  min-height: 3.6rem; font-size: 1.7rem;
+  background: var(--card); border: 2.5px solid var(--edge); border-radius: 14px;
+  box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.key:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.key.go { background: var(--h); color: var(--on-solid); font-size: 1.3rem; }
+.key.bk { font-size: 1.3rem; }
+.feedback { margin-top: 1rem; min-height: 3rem; }
+.fb { display: flex; flex-direction: column; gap: .6rem; }
+.fb-line { font-family: var(--font-d); font-size: 1.4rem; }
+.fb-line.good { color: var(--good); }
+.fb-line.bad { color: var(--bad); }
+
+/* 결과 */
+.result { text-align: center; display: flex; flex-direction: column; gap: .8rem; align-items: center; }
+.stars { display: flex; gap: .4rem; }
+.stars .star { width: 3.6rem; height: 3.6rem; }
+.stars .star.on { animation: pop .45s both; animation-delay: calc(var(--n) * 160ms); }
+.star { width: 1.2rem; height: 1.2rem; fill: var(--paper-2); stroke: var(--edge); stroke-width: 1.5; stroke-linejoin: round; }
+.star.on { fill: var(--gold); }
+.miss-list { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
+.row { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; margin-top: .4rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dot, .stars .star.on { animation: none; }
+  .prog i, .btn, .choice { transition: none; }
+}
+
+body { margin: 0; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+  <section id="home">
+    <header class="top">
+      <div>
+        <h1>구구단 놀이터</h1>
+        <p class="sub">표에서 단을 고르고, 한 칸씩 색칠해 보세요.</p>
+      </div>
+      <span data-slot="snd"></span>
+    </header>
+    <div class="stats">
+      <span class="stat"><svg class="star on" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,2 15,9 22,9.3 16.5,14 18.3,21 12,17 5.7,21 7.5,14 2,9.3 9,9"/></svg>모은 별 <b id="starTotal">0</b></span>
+      <span class="stat">익힌 칸 <b id="doneCount">0</b>/72</span>
+    </div>
+    <div class="card board-card"><div class="board" id="board" role="group" aria-label="구구단 표"></div></div>
+    <div class="legend" id="legend"></div>
+    <div class="panel" id="panel"></div>
+    <div class="challenge">
+      <button class="btn wide" data-act="challenge">도전하기 · 2~9단 섞어서 10문제</button>
+      <p class="note">숫자를 직접 써서 답해요. 한 번에 맞히면 칸이 가장 진한 색이 돼요.</p>
+    </div>
+  </section>
+
+  <section id="learn" hidden></section>
+  <section id="quiz" hidden></section>
+  <section id="result" hidden></section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SKEY = 'gugudan-nori-v1';
+  var LV = ['아직 몰라요', '익히는 중', '거의 다', '완벽'];
+  var TIPS = {
+    2: '2단은 같은 수를 두 번 더한 값이에요. 2×6은 6+6=12예요.',
+    3: '3단은 3씩 뛰어 세요. 3, 6, 9, 12, 15…',
+    4: '4단은 2단의 두 배예요. 4×3은 2×3=6의 두 배인 12예요.',
+    5: '5단 답의 끝자리는 5와 0이 번갈아 나와요. 5, 10, 15, 20…',
+    6: '6단은 3단의 두 배예요. 6×4는 3×4=12의 두 배인 24예요.',
+    7: '곱하는 순서를 바꿔도 답은 같아요. 7×3은 3×7과 같으니, 앞에서 배운 단을 거꾸로 떠올려 보세요.',
+    8: '8단은 4단의 두 배예요. 8×5는 4×5=20의 두 배인 40이에요.',
+    9: '9단 답은 두 자리 수를 더하면 항상 9가 돼요. 18은 1+8, 27은 2+7, 81은 8+1이에요.'
+  };
+
+  function $(s) { return document.querySelector(s); }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* ---------- 저장 ---------- */
+  var store = (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem(SKEY));
+      if (s && s.facts) return s;
+    } catch (e) {}
+    return { facts: {}, stars: 0, sound: true, sel: 2 };
+  })();
+  if (!(store.sel >= 2 && store.sel <= 9)) store.sel = 2;
+  function save() { try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {} }
+  function lvl(a, b) { return store.facts[a + 'x' + b] || 0; }
+  function setLvl(a, b, v) { store.facts[a + 'x' + b] = Math.max(0, Math.min(3, v)); }
+
+  /* ---------- 한글 읽기 ---------- */
+  var SD = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+  function sino(n) {
+    if (n < 10) return SD[n];
+    return (n < 20 ? '' : SD[Math.floor(n / 10)]) + '십' + (n % 10 ? SD[n % 10] : '');
+  }
+  function eun(w) { return ((w.charCodeAt(w.length - 1) - 0xAC00) % 28) ? '은' : '는'; }
+  function reading(a, b) { return sino(a) + ' 곱하기 ' + sino(b) + eun(sino(b)) + ' ' + sino(a * b); }
+
+  /* ---------- 소리 ---------- */
+  var ac = null;
+  function tone(freqs, dur, type, vol) {
+    if (!store.sound) return;
+    dur = dur || 0.12; type = type || 'sine'; vol = vol || 0.14;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      var t = ac.currentTime;
+      freqs.forEach(function (f, i) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.type = type; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t + i * dur);
+        g.gain.exponentialRampToValueAtTime(vol, t + i * dur + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + (i + 1) * dur);
+        o.connect(g); g.connect(ac.destination);
+        o.start(t + i * dur); o.stop(t + (i + 1) * dur + 0.02);
+      });
+    } catch (e) {}
+  }
+  function speak(text) {
+    if (!store.sound) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR'; u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function hush() { try { window.speechSynthesis.cancel(); } catch (e) {} }
+
+  var ICON_ON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  function sndBtn() {
+    return '<button class="icon-btn snd" data-act="snd" aria-pressed="' + store.sound + '" aria-label="소리 켜기 끄기">' + (store.sound ? ICON_ON : ICON_OFF) + '</button>';
+  }
+  function paintSnd() {
+    var list = document.querySelectorAll('.snd');
+    for (var i = 0; i < list.length; i++) {
+      list[i].setAttribute('aria-pressed', String(store.sound));
+      list[i].innerHTML = store.sound ? ICON_ON : ICON_OFF;
+    }
+  }
+  function starSvg(on, n) {
+    return '<svg class="star' + (on ? ' on' : '') + '" style="--n:' + n + '" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,2 15,9 22,9.3 16.5,14 18.3,21 12,17 5.7,21 7.5,14 2,9.3 9,9"/></svg>';
+  }
+
+  /* ---------- 화면 전환 ---------- */
+  var screens = ['home', 'learn', 'quiz', 'result'];
+  function show(name) {
+    screens.forEach(function (n) { $('#' + n).hidden = n !== name; });
+    window.scrollTo(0, 0);
+  }
+  function setHue(a) { $('#app').style.setProperty('--h', 'var(--d' + a + ')'); }
+
+  /* ---------- 홈 ---------- */
+  function renderHome() {
+    hush();
+    if (S && S.timer) clearTimeout(S.timer);
+    setHue(store.sel);
+    document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
+
+    var h = '<div class="corner"></div>';
+    var a, b, l, done = 0, rowDone = 0;
+    for (b = 1; b <= 9; b++) h += '<div class="colhead">' + b + '</div>';
+    for (a = 2; a <= 9; a++) {
+      h += '<button class="rowhead" data-dan="' + a + '" style="--c:var(--d' + a + ')" aria-pressed="' + (a === store.sel) + '">' + a + '단</button>';
+      for (b = 1; b <= 9; b++) {
+        l = lvl(a, b);
+        if (l > 0) done++;
+        if (a === store.sel && l > 0) rowDone++;
+        h += '<div class="cell l' + l + (a === store.sel ? ' insel' : '') + '" style="--c:var(--d' + a + ')" aria-label="' + a + ' 곱하기 ' + b + ', ' + LV[l] + '">' + (l > 0 ? a * b : '') + '</div>';
+      }
+    }
+    $('#board').innerHTML = h;
+    $('#starTotal').textContent = store.stars;
+    $('#doneCount').textContent = done;
+
+    var lg = '';
+    for (var i = 0; i < 4; i++) lg += '<span><i class="cell l' + i + '" style="--c:var(--h)"></i>' + LV[i] + '</span>';
+    $('#legend').innerHTML = lg;
+
+    $('#panel').innerHTML =
+      '<div class="panel-head"><h2>' + store.sel + '단</h2><span class="sub" style="margin:0">' + rowDone + '/9칸 익혔어요</span></div>' +
+      '<div class="actions"><button class="btn primary" data-act="learn">배우기</button><button class="btn" data-act="practice">연습하기</button></div>';
+    show('home');
+  }
+
+  /* ---------- 배우기 ---------- */
+  var L = { a: 2, step: 1 };
+  function startLearn(a) {
+    L = { a: a, step: 1 };
+    setHue(a);
+    show('learn');
+    renderLearn(true);
+  }
+  function renderLearn(speakIt) {
+    var a = L.a, b = L.step, p = a * b, k, r, c;
+    if (lvl(a, b) < 1) { setLvl(a, b, 1); save(); }
+    var chips = '';
+    for (k = 1; k <= 9; k++) {
+      chips += k <= b
+        ? '<button class="chip' + (k === b ? ' cur' : '') + '" data-k="' + k + '" aria-label="' + a + ' 곱하기 ' + k + '">' + (a * k) + '</button>'
+        : '<button class="chip future" data-k="' + k + '" aria-label="' + a + ' 곱하기 ' + k + '">?</button>';
+    }
+    var dots = '';
+    for (r = 0; r < b; r++) for (c = 0; c < a; c++) dots += '<i class="dot' + (r % 2 ? ' alt' : '') + '" style="--r:' + r + '"></i>';
+
+    $('#learn').innerHTML =
+      '<header class="top"><button class="btn small" data-act="home">← 처음으로</button><h2 class="title">' + a + '단 배우기</h2>' + sndBtn() + '</header>' +
+      '<div class="card eq-card">' +
+        '<div class="eq" aria-live="polite"><span>' + a + '</span><span class="op">×</span><span>' + b + '</span><span class="op">=</span><span class="ans">' + p + '</span></div>' +
+        '<p class="read">' + reading(a, b) + '</p>' +
+      '</div>' +
+      '<div class="nav">' +
+        '<button class="btn" data-act="prev"' + (b === 1 ? ' disabled' : '') + '>이전</button>' +
+        '<button class="btn" data-act="hear">듣기</button>' +
+        '<button class="btn primary" data-act="next">' + (b === 9 ? '연습하러 가기' : '다음') + '</button>' +
+      '</div>' +
+      '<div class="card"><div class="viz"><div class="dotgrid" style="--cols:' + a + '">' + dots + '</div>' +
+        '<div class="vcap"><p class="big">' + a + '개씩<br>' + b + '묶음</p><p>모두 <b>' + p + '</b>개</p></div></div></div>' +
+      '<div class="skip"><h3>' + a + '씩 뛰어 세기</h3><div class="chips">' + chips + '</div></div>' +
+      '<div class="tip card"><h3>' + a + '단 비밀</h3><p>' + TIPS[a] + '</p></div>';
+    var nx = document.querySelector('#learn [data-act="next"]');
+    if (nx) nx.focus({ preventScroll: true });
+    if (speakIt) speak(reading(a, b));
+  }
+
+  /* ---------- 문제 ---------- */
+  var S = null;
+
+  function pickWeighted(n) {
+    var pool = [], a, b;
+    for (a = 2; a <= 9; a++) for (b = 1; b <= 9; b++) pool.push({ a: a, b: b, w: [8, 4, 2, 1][lvl(a, b)] * (b === 1 ? 0.4 : 1) });
+    var out = [];
+    while (out.length < n) {
+      var tot = pool.reduce(function (s, x) { return s + x.w; }, 0);
+      var r = Math.random() * tot, i = 0;
+      for (; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) break; }
+      i = Math.min(i, pool.length - 1);
+      out.push([pool[i].a, pool[i].b]);
+      pool.splice(i, 1);
+    }
+    return out;
+  }
+
+  function makeChoices(a, b) {
+    var p = a * b, set = [p];
+    var c = shuffle([p + a, p - a, p + b, p - b, a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b,
+      Number(String(p).split('').reverse().join('')), p + 1, p - 1, p + 10, p - 10]);
+    for (var i = 0; i < c.length && set.length < 4; i++) {
+      if (c[i] > 0 && c[i] <= 90 && set.indexOf(c[i]) < 0) set.push(c[i]);
+    }
+    while (set.length < 4) {
+      var v = 1 + Math.floor(Math.random() * 81);
+      if (set.indexOf(v) < 0) set.push(v);
+    }
+    return shuffle(set);
+  }
+
+  function startSession(opts) {
+    var facts, b;
+    if (opts.facts) facts = opts.facts.slice();
+    else if (opts.mode === 'practice') {
+      facts = [];
+      for (b = 1; b <= 9; b++) facts.push([opts.dan, b]);
+      var fresh = facts.every(function (f) { return lvl(f[0], f[1]) === 0; });
+      if (!fresh) shuffle(facts);
+    } else facts = pickWeighted(10);
+    S = {
+      opts: opts, mode: opts.mode,
+      queue: facts.map(function (f) { return { a: f[0], b: f[1], re: 0, first: true }; }),
+      idx: 0, total: facts.length, ok: 0, miss: [], streak: 0, best: 0,
+      t0: Date.now(), locked: false, input: '', timer: null
+    };
+    show('quiz');
+    renderQuiz();
+  }
+
+  function renderQuiz() {
+    var q = S.queue[S.idx];
+    S.locked = false; S.input = '';
+    setHue(q.a);
+    if (!q.opts && S.mode === 'practice') q.opts = makeChoices(q.a, q.b);
+    var pct = Math.round(S.idx / S.queue.length * 100);
+    var h =
+      '<header class="top"><button class="btn small" data-act="home">← 그만하기</button>' +
+      '<div class="prog" role="progressbar" aria-label="진행" aria-valuemin="0" aria-valuemax="' + S.queue.length + '" aria-valuenow="' + S.idx + '"><i style="width:' + pct + '%"></i></div>' + sndBtn() + '</header>' +
+      '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
+      '<div class="card q-card"><div class="q"><span>' + q.a + '</span><span class="op">×</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div></div>';
+    if (S.mode === 'practice') {
+      h += '<div class="choices">' + q.opts.map(function (v, i) {
+        return '<button class="choice" data-v="' + v + '"><kbd>' + (i + 1) + '</kbd>' + v + '</button>';
+      }).join('') + '</div>';
+    } else {
+      var keys = '';
+      for (var n = 1; n <= 9; n++) keys += '<button class="key" data-key="' + n + '">' + n + '</button>';
+      keys += '<button class="key bk" data-key="bk" aria-label="지우기">지움</button><button class="key" data-key="0">0</button><button class="key go" data-key="ok">확인</button>';
+      h += '<div class="keypad">' + keys + '</div>';
+    }
+    h += '<div class="feedback" id="fb" aria-live="polite"></div>';
+    $('#quiz').innerHTML = h;
+  }
+
+  function skipChips(a, b) {
+    var s = '';
+    for (var k = 1; k <= b; k++) s += '<span class="chip' + (k === b ? ' cur' : '') + '">' + (a * k) + '</span>';
+    return s;
+  }
+
+  function answer(val, btn) {
+    if (!S || S.locked) return;
+    var q = S.queue[S.idx], p = q.a * q.b, ok = val === p;
+    S.locked = true;
+    if (q.first) {
+      var cap = S.mode === 'challenge' ? 3 : 2, cur = lvl(q.a, q.b);
+      if (ok) { S.ok++; setLvl(q.a, q.b, Math.max(cur, Math.min(cap, cur + 1))); }
+      else { S.miss.push([q.a, q.b]); setLvl(q.a, q.b, Math.max(0, cur - 1)); }
+      save();
+    }
+    var blank = $('#blank');
+    blank.textContent = ok ? p : (S.mode === 'challenge' ? S.input : val);
+    blank.className = 'blank ' + (ok ? 'good' : 'bad');
+    var list = document.querySelectorAll('.choice, .key');
+    for (var i = 0; i < list.length; i++) {
+      list[i].disabled = true;
+      if (list[i].classList.contains('choice')) {
+        if (+list[i].dataset.v === p) list[i].classList.add('good');
+        else if (list[i] === btn) list[i].classList.add('bad');
+      }
+    }
+    if (ok) {
+      S.streak++; S.best = Math.max(S.best, S.streak);
+      tone([660, 880]);
+      $('#fb').innerHTML = '<p class="fb-line good">맞았어요</p>';
+      S.timer = setTimeout(next, 900);
+    } else {
+      S.streak = 0;
+      tone([220, 196], 0.18, 'triangle');
+      if (q.re < 2) S.queue.splice(Math.min(S.idx + 4, S.queue.length), 0, { a: q.a, b: q.b, re: q.re + 1, first: false });
+      $('#fb').innerHTML =
+        '<div class="fb"><p class="fb-line bad">아쉬워요. ' + q.a + ' × ' + q.b + ' = ' + p + '</p>' +
+        '<p class="read" style="margin:0">' + reading(q.a, q.b) + '</p>' +
+        '<div class="chips" aria-label="' + q.a + '씩 뛰어 세기">' + skipChips(q.a, q.b) + '</div>' +
+        '<button class="btn primary" id="nextBtn" data-act="nextq">다음 문제</button></div>';
+      speak(reading(q.a, q.b));
+      var nb = $('#nextBtn'); if (nb) nb.focus({ preventScroll: true });
+    }
+  }
+
+  function next() {
+    if (!S) return;
+    clearTimeout(S.timer);
+    S.idx++;
+    if (S.idx >= S.queue.length) return finish();
+    renderQuiz();
+  }
+
+  function keypad(k) {
+    if (!S || S.locked) return;
+    if (k === 'bk') S.input = S.input.slice(0, -1);
+    else if (k === 'ok') { if (S.input) answer(+S.input); return; }
+    else if (S.input.length < 2 && !(S.input === '' && k === '0')) S.input += k;
+    $('#blank').textContent = S.input || '?';
+  }
+
+  function finish() {
+    var n = S.total, ratio = n ? S.ok / n : 0;
+    var stars = ratio >= 0.9 ? 3 : ratio >= 0.7 ? 2 : 1;
+    store.stars += stars; save();
+    tone([523, 659, 784, 1047], 0.14);
+    var sec = Math.round((Date.now() - S.t0) / 1000);
+    var uniq = [], seen = {};
+    S.miss.forEach(function (f) { var k = f[0] + 'x' + f[1]; if (!seen[k]) { seen[k] = 1; uniq.push(f); } });
+    S.missUniq = uniq;
+    var head = stars === 3 ? '모두 알고 있어요' : stars === 2 ? '거의 다 왔어요' : '조금만 더 익혀요';
+    var missHtml = uniq.length
+      ? '<div><h3>다시 볼 구구단</h3><div class="miss-list">' + uniq.map(function (f) { return '<span class="chip">' + f[0] + '×' + f[1] + '=' + f[0] * f[1] + '</span>'; }).join('') + '</div></div>'
+      : '';
+    $('#result').innerHTML =
+      '<header class="top"><span></span><span></span>' + sndBtn() + '</header>' +
+      '<div class="card result">' +
+        '<div class="stars">' + starSvg(stars >= 1, 0) + starSvg(stars >= 2, 1) + starSvg(stars >= 3, 2) + '</div>' +
+        '<h2>' + head + '</h2>' +
+        '<p>' + n + '문제 중 ' + S.ok + '문제를 한 번에 맞혔어요.</p>' +
+        '<p class="note">걸린 시간 ' + sec + '초 · 가장 길게 이어서 맞힌 횟수 ' + S.best + '번</p>' +
+        missHtml +
+        '<div class="row">' +
+          '<button class="btn primary" data-act="again">다시 하기</button>' +
+          (uniq.length ? '<button class="btn" data-act="missed">틀린 것 연습</button>' : '') +
+          '<button class="btn" data-act="home">처음으로</button>' +
+        '</div>' +
+      '</div>';
+    show('result');
+  }
+
+  /* ---------- 이벤트 ---------- */
+  $('#app').addEventListener('click', function (e) {
+    var t = e.target.closest('button');
+    if (!t || t.disabled) return;
+    var act = t.dataset.act;
+    if (act === 'home') renderHome();
+    else if (act === 'snd') { store.sound = !store.sound; save(); if (!store.sound) hush(); paintSnd(); }
+    else if (act === 'learn') startLearn(store.sel);
+    else if (act === 'practice') startSession({ mode: 'practice', dan: store.sel });
+    else if (act === 'challenge') startSession({ mode: 'challenge' });
+    else if (act === 'prev') { if (L.step > 1) { L.step--; renderLearn(true); } }
+    else if (act === 'next') {
+      if (L.step < 9) { L.step++; renderLearn(true); }
+      else startSession({ mode: 'practice', dan: L.a });
+    }
+    else if (act === 'hear') { var was = store.sound; store.sound = true; speak(reading(L.a, L.step)); store.sound = was; }
+    else if (act === 'nextq') next();
+    else if (act === 'again') startSession(S.opts);
+    else if (act === 'missed') startSession({ mode: 'practice', facts: S.missUniq });
+    else if (t.dataset.dan) { store.sel = +t.dataset.dan; save(); renderHome(); }
+    else if (t.dataset.k && t.closest('#learn')) { L.step = +t.dataset.k; renderLearn(true); }
+    else if (t.classList.contains('choice')) answer(+t.dataset.v, t);
+    else if (t.dataset.key) keypad(t.dataset.key);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!$('#quiz').hidden && S) {
+      if (S.locked) {
+        if (e.key === 'Enter') { e.preventDefault(); next(); }
+        return;
+      }
+      if (S.mode === 'practice') {
+        var i = '1234'.indexOf(e.key);
+        if (i >= 0) { var b = document.querySelectorAll('.choice')[i]; if (b) { e.preventDefault(); answer(+b.dataset.v, b); } }
+      } else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); keypad(e.key); }
+      else if (e.key === 'Backspace') { e.preventDefault(); keypad('bk'); }
+      else if (e.key === 'Enter') { e.preventDefault(); keypad('ok'); }
+    } else if (!$('#learn').hidden) {
+      if (e.key === 'ArrowRight' && L.step < 9) { L.step++; renderLearn(true); }
+      else if (e.key === 'ArrowLeft' && L.step > 1) { L.step--; renderLearn(true); }
+    }
+  });
+
+  renderHome();
+})();
+</script>
+
+</body>
+</html>
