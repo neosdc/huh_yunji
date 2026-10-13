@@ -158,6 +158,19 @@ button:disabled { opacity: .4; cursor: default; }
 .challenge { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
 .note { color: var(--ink-2); font-size: .9rem; text-align: center; }
 
+.custom { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .8rem; }
+.custom h3 { margin: 0; }
+.custom .sub { margin: 0; font-size: .9rem; }
+.picks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+.pick {
+  min-height: 3rem; padding: .3rem; font-family: var(--font-d); font-size: 1.15rem;
+  background: var(--card); color: var(--ink);
+  border: 2.5px solid var(--edge); border-radius: 12px;
+}
+.pick[aria-pressed="true"] { background: var(--c); color: var(--on-solid); box-shadow: 0 3px 0 var(--edge-shadow); transform: translateY(-1px); }
+.pick[aria-pressed="true"]::before { content: '✓ '; }
+.pick-tools { display: flex; gap: .5rem; }
+
 /* 배우기 */
 .eq-card { text-align: center; }
 .eq { display: flex; justify-content: center; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: clamp(2.3rem, 12vw, 3.4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -194,6 +207,13 @@ span.chip { cursor: default; }
 .meta { display: flex; justify-content: space-between; color: var(--ink-2); font-size: .95rem; margin-bottom: .6rem; font-variant-numeric: tabular-nums; }
 .streak { visibility: hidden; color: var(--ink); }
 .streak.on { visibility: visible; }
+.timer { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+.tlabel { font-size: .9rem; color: var(--ink-2); white-space: nowrap; }
+.timer .bar { flex: 1; min-width: 0; height: .9rem; background: var(--card); border: 2.5px solid var(--edge); border-radius: 999px; overflow: hidden; }
+.timer .bar i { display: block; height: 100%; width: 100%; background: var(--h); }
+.timer b { font-family: var(--font-d); font-weight: 400; font-size: 1.5rem; line-height: 1; min-width: 1.2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.timer.low .bar i { background: var(--bad); }
+.timer.low b { color: var(--bad); }
 .q-card { text-align: center; padding-block: 1.4rem; }
 .q { display: flex; justify-content: center; align-items: center; gap: .6rem; flex-wrap: wrap; font-size: clamp(2.6rem, 14vw, 4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .q .op { color: var(--ink-2); }
@@ -269,6 +289,18 @@ body { margin: 0; }
       <button class="btn wide" data-act="challenge">도전하기 · 2~9단 섞어서 10문제</button>
       <p class="note">숫자를 직접 써서 답해요. 한 번에 맞히면 칸이 가장 진한 색이 돼요.</p>
     </div>
+    <div class="card custom">
+      <div>
+        <h3>범위를 정해서 도전하기</h3>
+        <p class="sub">도전할 단을 골라 보세요. 고른 단에서만 문제가 나와요.</p>
+      </div>
+      <div class="picks" id="picks" role="group" aria-label="도전할 단 고르기"></div>
+      <div class="pick-tools">
+        <button class="btn small" data-act="pickall">전체 선택</button>
+        <button class="btn small" data-act="pickclear">모두 해제</button>
+      </div>
+      <button class="btn primary wide" id="customGo" data-act="custom"></button>
+    </div>
   </section>
 
   <section id="learn" hidden></section>
@@ -312,6 +344,10 @@ body { margin: 0; }
     return { facts: {}, stars: 0, sound: true, sel: 2 };
   })();
   if (!(store.sel >= 2 && store.sel <= 9)) store.sel = 2;
+  if (!Array.isArray(store.custom)) store.custom = [2, 3, 4];
+  store.custom = store.custom.filter(function (d, i, arr) {
+    return d >= 2 && d <= 9 && arr.indexOf(d) === i;
+  }).sort(function (x, y) { return x - y; });
   function save() { try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {} }
   function lvl(a, b) { return store.facts[a + 'x' + b] || 0; }
   function setLvl(a, b, v) { store.facts[a + 'x' + b] = Math.max(0, Math.min(3, v)); }
@@ -381,9 +417,20 @@ body { margin: 0; }
   function setHue(a) { $('#app').style.setProperty('--h', 'var(--d' + a + ')'); }
 
   /* ---------- 홈 ---------- */
+  function renderCustom() {
+    var sel = store.custom, h = '', a;
+    for (a = 2; a <= 9; a++) {
+      h += '<button class="pick" data-pick="' + a + '" style="--c:var(--d' + a + ')" aria-pressed="' + (sel.indexOf(a) >= 0) + '">' + a + '단</button>';
+    }
+    $('#picks').innerHTML = h;
+    var n = sel.length, go = $('#customGo');
+    go.disabled = n === 0;
+    go.textContent = n ? sel.join('·') + '단 도전하기 · ' + Math.min(10, n * 9) + '문제' : '단을 하나 이상 골라 주세요';
+  }
+
   function renderHome() {
     hush();
-    if (S && S.timer) clearTimeout(S.timer);
+    if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
     setHue(store.sel);
     document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
 
@@ -409,7 +456,9 @@ body { margin: 0; }
 
     $('#panel').innerHTML =
       '<div class="panel-head"><h2>' + store.sel + '단</h2><span class="sub" style="margin:0">' + rowDone + '/9칸 익혔어요</span></div>' +
-      '<div class="actions"><button class="btn primary" data-act="learn">배우기</button><button class="btn" data-act="practice">연습하기</button></div>';
+      '<div class="actions"><button class="btn primary" data-act="learn">배우기</button><button class="btn" data-act="practice">연습하기</button></div>' +
+      '<p class="note">연습하기와 도전하기는 문제마다 5초 안에 답해야 해요.</p>';
+    renderCustom();
     show('home');
   }
 
@@ -456,11 +505,12 @@ body { margin: 0; }
   /* ---------- 문제 ---------- */
   var S = null;
 
-  function pickWeighted(n) {
-    var pool = [], a, b;
-    for (a = 2; a <= 9; a++) for (b = 1; b <= 9; b++) pool.push({ a: a, b: b, w: [8, 4, 2, 1][lvl(a, b)] * (b === 1 ? 0.4 : 1) });
+  function pickWeighted(n, dans) {
+    var pool = [], a, b, i0;
+    dans = dans || [2, 3, 4, 5, 6, 7, 8, 9];
+    for (i0 = 0; i0 < dans.length; i0++) for (a = dans[i0], b = 1; b <= 9; b++) pool.push({ a: a, b: b, w: [8, 4, 2, 1][lvl(a, b)] * (b === 1 ? 0.4 : 1) });
     var out = [];
-    while (out.length < n) {
+    while (out.length < n && pool.length) {
       var tot = pool.reduce(function (s, x) { return s + x.w; }, 0);
       var r = Math.random() * tot, i = 0;
       for (; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) break; }
@@ -493,12 +543,13 @@ body { margin: 0; }
       for (b = 1; b <= 9; b++) facts.push([opts.dan, b]);
       var fresh = facts.every(function (f) { return lvl(f[0], f[1]) === 0; });
       if (!fresh) shuffle(facts);
-    } else facts = pickWeighted(10);
+    } else facts = pickWeighted(opts.dans ? Math.min(10, opts.dans.length * 9) : 10, opts.dans);
     S = {
       opts: opts, mode: opts.mode,
       queue: facts.map(function (f) { return { a: f[0], b: f[1], re: 0, first: true }; }),
       idx: 0, total: facts.length, ok: 0, miss: [], streak: 0, best: 0,
-      t0: Date.now(), locked: false, input: '', timer: null
+      t0: Date.now(), locked: false, input: '', timer: null,
+      raf: 0, left: 0, deadline: 0, lockedAt: 0, late: 0
     };
     show('quiz');
     renderQuiz();
@@ -513,7 +564,8 @@ body { margin: 0; }
     var h =
       '<header class="top"><button class="btn small" data-act="home">← 그만하기</button>' +
       '<div class="prog" role="progressbar" aria-label="진행" aria-valuemin="0" aria-valuemax="' + S.queue.length + '" aria-valuenow="' + S.idx + '"><i style="width:' + pct + '%"></i></div>' + sndBtn() + '</header>' +
-      '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
+      '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + (S.opts.dans ? ' · ' + S.opts.dans.join('·') + '단' : '') + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
+      '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">5</b></div>' +
       '<div class="card q-card"><div class="q"><span>' + q.a + '</span><span class="op">×</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div></div>';
     if (S.mode === 'practice') {
       h += '<div class="choices">' + q.opts.map(function (v, i) {
@@ -527,6 +579,7 @@ body { margin: 0; }
     }
     h += '<div class="feedback" id="fb" aria-live="polite"></div>';
     $('#quiz').innerHTML = h;
+    startTimer();
   }
 
   function skipChips(a, b) {
@@ -535,10 +588,13 @@ body { margin: 0; }
     return s;
   }
 
-  function answer(val, btn) {
+  function answer(val, btn, timedOut) {
     if (!S || S.locked) return;
-    var q = S.queue[S.idx], p = q.a * q.b, ok = val === p;
+    var q = S.queue[S.idx], p = q.a * q.b, ok = !timedOut && val === p;
     S.locked = true;
+    S.lockedAt = Date.now();
+    stopTimer();
+    if (timedOut) S.late++;
     if (q.first) {
       var cap = S.mode === 'challenge' ? 3 : 2, cur = lvl(q.a, q.b);
       if (ok) { S.ok++; setLvl(q.a, q.b, Math.max(cur, Math.min(cap, cur + 1))); }
@@ -546,7 +602,7 @@ body { margin: 0; }
       save();
     }
     var blank = $('#blank');
-    blank.textContent = ok ? p : (S.mode === 'challenge' ? S.input : val);
+    blank.textContent = ok ? p : timedOut ? (S.input || '?') : (S.mode === 'challenge' ? S.input : val);
     blank.className = 'blank ' + (ok ? 'good' : 'bad');
     var list = document.querySelectorAll('.choice, .key');
     for (var i = 0; i < list.length; i++) {
@@ -566,7 +622,7 @@ body { margin: 0; }
       tone([220, 196], 0.18, 'triangle');
       if (q.re < 2) S.queue.splice(Math.min(S.idx + 4, S.queue.length), 0, { a: q.a, b: q.b, re: q.re + 1, first: false });
       $('#fb').innerHTML =
-        '<div class="fb"><p class="fb-line bad">아쉬워요. ' + q.a + ' × ' + q.b + ' = ' + p + '</p>' +
+        '<div class="fb"><p class="fb-line bad">' + (timedOut ? '시간이 끝났어요. ' : '아쉬워요. ') + q.a + ' × ' + q.b + ' = ' + p + '</p>' +
         '<p class="read" style="margin:0">' + reading(q.a, q.b) + '</p>' +
         '<div class="chips" aria-label="' + q.a + '씩 뛰어 세기">' + skipChips(q.a, q.b) + '</div>' +
         '<button class="btn primary" id="nextBtn" data-act="nextq">다음 문제</button></div>';
@@ -574,6 +630,44 @@ body { margin: 0; }
       var nb = $('#nextBtn'); if (nb) nb.focus({ preventScroll: true });
     }
   }
+
+  /* ---------- 5초 제한 ---------- */
+  var LIMIT = 5000;
+  function paintTimer() {
+    var bar = $('#tbar'), num = $('#tnum'), box = $('#tbox');
+    if (!bar || !S) return;
+    bar.style.width = (S.left / LIMIT * 100) + '%';
+    num.textContent = Math.ceil(S.left / 1000);
+    box.classList.toggle('low', S.left <= 2000);
+  }
+  function stopTimer() {
+    if (S && S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; }
+  }
+  function tick() {
+    if (!S || S.locked) return;
+    S.left = S.deadline - performance.now();
+    if (S.left <= 0) { S.left = 0; paintTimer(); answer(null, null, true); return; }
+    paintTimer();
+    S.raf = requestAnimationFrame(tick);
+  }
+  function startTimer() {
+    stopTimer();
+    S.left = LIMIT;
+    S.deadline = performance.now() + LIMIT;
+    paintTimer();
+    S.raf = requestAnimationFrame(tick);
+  }
+  /* 다른 탭으로 나가 있는 동안에는 시간이 흐르지 않는다 */
+  document.addEventListener('visibilitychange', function () {
+    if (!S || S.locked || $('#quiz').hidden) return;
+    if (document.hidden) {
+      stopTimer();
+      S.left = Math.max(0, S.deadline - performance.now());
+    } else if (!S.raf) {
+      S.deadline = performance.now() + S.left;
+      S.raf = requestAnimationFrame(tick);
+    }
+  });
 
   function next() {
     if (!S) return;
@@ -610,7 +704,7 @@ body { margin: 0; }
         '<div class="stars">' + starSvg(stars >= 1, 0) + starSvg(stars >= 2, 1) + starSvg(stars >= 3, 2) + '</div>' +
         '<h2>' + head + '</h2>' +
         '<p>' + n + '문제 중 ' + S.ok + '문제를 한 번에 맞혔어요.</p>' +
-        '<p class="note">걸린 시간 ' + sec + '초 · 가장 길게 이어서 맞힌 횟수 ' + S.best + '번</p>' +
+        '<p class="note">걸린 시간 ' + sec + '초 · 가장 길게 이어서 맞힌 횟수 ' + S.best + '번' + (S.late ? ' · 시간이 끝난 문제 ' + S.late + '번' : '') + '</p>' +
         missHtml +
         '<div class="row">' +
           '<button class="btn primary" data-act="again">다시 하기</button>' +
@@ -640,6 +734,17 @@ body { margin: 0; }
     else if (act === 'nextq') next();
     else if (act === 'again') startSession(S.opts);
     else if (act === 'missed') startSession({ mode: 'practice', facts: S.missUniq });
+    else if (act === 'custom') { if (store.custom.length) startSession({ mode: 'challenge', dans: store.custom.slice() }); }
+    else if (act === 'pickall') { store.custom = [2, 3, 4, 5, 6, 7, 8, 9]; save(); renderCustom(); }
+    else if (act === 'pickclear') { store.custom = []; save(); renderCustom(); }
+    else if (t.dataset.pick) {
+      var d = +t.dataset.pick, ix = store.custom.indexOf(d);
+      if (ix >= 0) store.custom.splice(ix, 1);
+      else { store.custom.push(d); store.custom.sort(function (x, y) { return x - y; }); }
+      save(); renderCustom();
+      var again = document.querySelector('.pick[data-pick="' + d + '"]');
+      if (again) again.focus({ preventScroll: true });
+    }
     else if (t.dataset.dan) { store.sel = +t.dataset.dan; save(); renderHome(); }
     else if (t.dataset.k && t.closest('#learn')) { L.step = +t.dataset.k; renderLearn(true); }
     else if (t.classList.contains('choice')) answer(+t.dataset.v, t);
@@ -650,7 +755,7 @@ body { margin: 0; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (!$('#quiz').hidden && S) {
       if (S.locked) {
-        if (e.key === 'Enter') { e.preventDefault(); next(); }
+        if (e.key === 'Enter') { e.preventDefault(); if (Date.now() - S.lockedAt > 400) next(); }
         return;
       }
       if (S.mode === 'practice') {
