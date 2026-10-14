@@ -172,17 +172,17 @@ button:disabled { opacity: .4; cursor: default; }
 .pick-tools { display: flex; gap: .5rem; }
 
 /* 놀이터 메뉴 */
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: 1rem; }
+.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-bottom: 1rem; }
 .tab {
-  font-family: var(--font-d); font-size: 1.05rem; padding: .6rem .4rem;
+  font-family: var(--font-d); font-size: 1.05rem; padding: .6rem .2rem; white-space: nowrap;
   background: var(--card); color: var(--ink);
   border: 2.5px solid var(--edge); border-radius: 14px; box-shadow: 0 4px 0 var(--edge-shadow);
 }
 .tab[aria-pressed="true"] { background: var(--ink); color: var(--card); transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
 
 /* 덧셈·뺄셈 */
-#asHome { display: flex; flex-direction: column; gap: 1.1rem; }
-#asHome .stats { margin-bottom: 0; }
+#asHome, #mlHome { display: flex; flex-direction: column; gap: 1.1rem; }
+#asHome .stats, #mlHome .stats { margin-bottom: 0; }
 .box { display: flex; flex-direction: column; gap: .7rem; }
 .box h3 { margin: 0; }
 .picks.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -226,9 +226,12 @@ button:disabled { opacity: .4; cursor: default; }
 .colcalc .mk { font-size: .85rem; min-height: 1.3rem; white-space: nowrap; color: var(--bad); }
 .colcalc .op { color: var(--ink-2); }
 .colcalc .rule { grid-column: 1 / -1; height: 3px; margin-block: .15rem; background: var(--ink); border-radius: 2px; }
+.colcalc .pp { color: var(--ink); }
+.colcalc .pp.z { color: var(--ink-2); opacity: .55; }
 .colcalc .res.on { background: var(--h); color: var(--on-solid); border-radius: 8px; }
 .steps { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .4rem; text-align: left; }
 .card h3 + .steps { margin-top: 0; }
+.steps .sub { margin: .35rem 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .25rem; font-size: .95rem; color: var(--ink-2); list-style: disc; }
 
 /* 배우기 */
 .eq-card { text-align: center; }
@@ -342,8 +345,9 @@ body { margin: 0; }
       <span data-slot="snd"></span>
     </header>
     <div class="tabs" role="group" aria-label="놀이터 고르기">
-      <button class="tab" id="tab-mul" data-tab="mul" aria-pressed="true">구구단 놀이터</button>
-      <button class="tab" id="tab-as" data-tab="as" aria-pressed="false">덧셈·뺄셈 놀이터</button>
+      <button class="tab" id="tab-mul" data-tab="mul" aria-pressed="true">구구단</button>
+      <button class="tab" id="tab-as" data-tab="as" aria-pressed="false">덧셈·뺄셈</button>
+      <button class="tab" id="tab-ml" data-tab="ml" aria-pressed="false">곱셈</button>
     </div>
     <div id="mulHome">
     <div class="stats">
@@ -371,6 +375,7 @@ body { margin: 0; }
     </div>
     </div>
     <div id="asHome" hidden></div>
+    <div id="mlHome" hidden></div>
   </section>
 
   <section id="learn" hidden></section>
@@ -418,7 +423,15 @@ body { margin: 0; }
   store.custom = store.custom.filter(function (d, i, arr) {
     return d >= 2 && d <= 9 && arr.indexOf(d) === i;
   }).sort(function (x, y) { return x - y; });
-  if (store.tab !== 'as') store.tab = 'mul';
+  if (store.tab !== 'as' && store.tab !== 'ml') store.tab = 'mul';
+  if (!store.ml || typeof store.ml !== 'object') store.ml = {};
+  if (!(store.ml.lv >= 0 && store.ml.lv <= 5)) store.ml.lv = 1;
+  if (!store.ml.best || typeof store.ml.best !== 'object') store.ml.best = {};
+  store.ml.solved = +store.ml.solved || 0;
+  if (!Array.isArray(store.ml.custom)) store.ml.custom = [1, 2];
+  store.ml.custom = store.ml.custom.filter(function (d, i, arr) {
+    return d >= 1 && d <= 5 && arr.indexOf(d) === i;
+  }).sort(function (x, y) { return x - y; });
   if (!store.as || typeof store.as !== 'object') store.as = {};
   if (['+', '-', 'm'].indexOf(store.as.op) < 0) store.as.op = '+';
   if (!(store.as.lv >= 0 && store.as.lv <= 6)) store.as.lv = 1;
@@ -436,6 +449,7 @@ body { margin: 0; }
   var SD = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
   function sino(n) {
     if (n < 10) return SD[n];
+    if (n >= 10000) return (n >= 20000 ? sino(Math.floor(n / 10000)) : '') + '만' + (n % 10000 ? sino(n % 10000) : '');
     if (n >= 1000) return (n >= 2000 ? SD[Math.floor(n / 1000)] : '') + '천' + (n % 1000 ? sino(n % 1000) : '');
     if (n >= 100) {
       var hd = Math.floor(n / 100), rm = n % 100;
@@ -520,6 +534,7 @@ body { margin: 0; }
     document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
     paintTabs();
     if (store.tab === 'as') { renderAS(); show('home'); return; }
+    if (store.tab === 'ml') { renderML(); show('home'); return; }
 
     var h = '<div class="corner"></div>';
     var a, b, l, done = 0, rowDone = 0;
@@ -593,8 +608,8 @@ body { margin: 0; }
   /* ---------- 덧셈·뺄셈 ---------- */
   var learnKind = 'mul';
   var AL = null;
-  var OPN = { '+': '덧셈', '-': '뺄셈', m: '덧셈·뺄셈 섞어서' };
-  var OPH = { '+': 6, '-': 8, m: 3 };
+  var OPN = { '+': '덧셈', '-': '뺄셈', m: '덧셈·뺄셈 섞어서', x: '곱셈' };
+  var OPH = { '+': 6, '-': 8, m: 3, x: 5 };
   var LVN = {
     '+': [null, ['합이 10 이하', '3 + 5'], ['받아올림 있는 덧셈', '7 + 5'], ['두 자리 수 + 한 자리 수', '47 + 8'], ['두 자리 수 + 두 자리 수', '36 + 47'], ['세 자리 수 + 두 자리 수', '248 + 57'], ['세 자리 수 + 세 자리 수', '326 + 485']],
     '-': [null, ['10 이하에서 빼기', '9 − 4'], ['받아내림 있는 뺄셈', '13 − 7'], ['두 자리 수 − 한 자리 수', '52 − 6'], ['두 자리 수 − 두 자리 수', '83 − 47'], ['세 자리 수 − 두 자리 수', '324 − 57'], ['세 자리 수 − 세 자리 수', '532 − 267']],
@@ -620,16 +635,16 @@ body { margin: 0; }
 
   function rnd(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
   function opOf(q) { return q.op || '*'; }
-  function sym(q) { var o = opOf(q); return o === '+' ? '+' : o === '-' ? '−' : '×'; }
+  function sym(q) { var o = opOf(q); return o === '+' ? '+' : o === '-' ? '−' : '×'; }  /* '*'(구구단)와 'x'(곱셈 놀이터)는 모두 × */
   function calc(q) { var o = opOf(q); return o === '+' ? q.a + q.b : o === '-' ? q.a - q.b : q.a * q.b; }
-  function hueOf(q) { var o = opOf(q); return o === '+' ? 6 : o === '-' ? 8 : q.a; }
-  function limitOf(q) { return opOf(q) === '*' ? 5000 : ASLIM[q.lv]; }
+  function hueOf(q) { var o = opOf(q); return o === '+' ? 6 : o === '-' ? 8 : o === 'x' ? OPH.x : q.a; }
+  function limitOf(q) { var o = opOf(q); return o === 'x' ? 0 : o === '*' ? 5000 : ASLIM[q.lv]; }  /* 0 = 제한 시간 없음 */
   function hasFinal(n) { var w = sino(n); return ((w.charCodeAt(w.length - 1) - 0xAC00) % 28) !== 0; }
   function jo(n, yes, no) { return n + (hasFinal(n) ? yes : no); }
   function ro(n) { var w = sino(n), f = (w.charCodeAt(w.length - 1) - 0xAC00) % 28; return n + ((f === 0 || f === 8) ? '로' : '으로'); }
   function readQ(q) {
     if (opOf(q) === '*') return reading(q.a, q.b);
-    return sino(q.a) + (q.op === '+' ? ' 더하기 ' : ' 빼기 ') + sino(q.b) + eun(sino(q.b)) + ' ' + sino(calc(q));
+    return sino(q.a) + (q.op === '+' ? ' 더하기 ' : q.op === 'x' ? ' 곱하기 ' : ' 빼기 ') + sino(q.b) + eun(sino(q.b)) + ' ' + sino(calc(q));
   }
   function factText(f) {
     var q = { a: f[0], b: f[1], op: f[2] };
@@ -670,6 +685,7 @@ body { margin: 0; }
 
   /* 풀이 순서 */
   function explain(q) {
+    if (q.op === 'x') return explainML(q);
     var a = q.a, b = q.b, r = calc(q), add = q.op === '+';
     var ao = a % 10;
     var base, other, need, rest;
@@ -729,11 +745,15 @@ body { margin: 0; }
     return s;
   }
   function stepsHtml(q) {
-    return '<ol class="steps">' + explain(q).map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>';
+    return '<ol class="steps">' + explain(q).map(function (s) {
+      if (typeof s === 'string') return '<li>' + s + '</li>';
+      return '<li>' + s.t + (s.sub ? '<ul class="sub">' + s.sub.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : '') + '</li>';
+    }).join('') + '</ol>';
   }
 
   function makeChoicesQ(q) {
     if (opOf(q) === '*') return makeChoices(q.a, q.b);
+    if (q.op === 'x') return makeChoicesML(q);
     var p = calc(q), a = q.a, b = q.b, set = [p], i, v;
     var c = [p + 1, p - 1, p + 10, p - 10, p + 2, p - 2];
     if (p >= 100) c.push(p + 100, p - 100);
@@ -760,13 +780,15 @@ body { margin: 0; }
   }
 
   function paintTabs() {
-    var as = store.tab === 'as';
-    $('#tab-mul').setAttribute('aria-pressed', String(!as));
-    $('#tab-as').setAttribute('aria-pressed', String(as));
-    $('#mulHome').hidden = as;
-    $('#asHome').hidden = !as;
-    $('#homeTitle').textContent = as ? '덧셈·뺄셈 놀이터' : '구구단 놀이터';
-    $('#homeSub').textContent = as ? '연산과 단계를 고르고 하나씩 익혀 보세요.' : '표에서 단을 고르고, 한 칸씩 색칠해 보세요.';
+    var t = store.tab;
+    $('#tab-mul').setAttribute('aria-pressed', String(t === 'mul'));
+    $('#tab-as').setAttribute('aria-pressed', String(t === 'as'));
+    $('#tab-ml').setAttribute('aria-pressed', String(t === 'ml'));
+    $('#mulHome').hidden = t !== 'mul';
+    $('#asHome').hidden = t !== 'as';
+    $('#mlHome').hidden = t !== 'ml';
+    $('#homeTitle').textContent = t === 'as' ? '덧셈·뺄셈 놀이터' : t === 'ml' ? '곱셈 놀이터' : '구구단 놀이터';
+    $('#homeSub').textContent = t === 'as' ? '연산과 단계를 고르고 하나씩 익혀 보세요.' : t === 'ml' ? '여러 자리 수 곱셈을 단계별로 익혀 보세요.' : '표에서 단을 고르고, 한 칸씩 색칠해 보세요.';
   }
 
   function levelBtn(op, lv, sel) {
@@ -890,6 +912,191 @@ body { margin: 0; }
     if (speakIt) speak(readQ(q));
   }
 
+  /* ---------- 곱셈 놀이터 (여러 자리 수 곱셈, 제한 시간 없음) ---------- */
+  var ML = null;
+  var LVM = [null,
+    ['두 자리 × 한 자리', '올림 없음 · 21 × 4'],
+    ['두 자리 × 한 자리', '올림 있음 · 47 × 6'],
+    ['세 자리 × 한 자리', '328 × 7'],
+    ['두 자리 × 두 자리', '36 × 47'],
+    ['세 자리 × 두 자리', '248 × 57']];
+  var TIPSML = [null,
+    '일의 자리와 십의 자리에 각각 곱해서 나란히 쓰면 돼요. 21 × 4는 20 × 4 = 80과 1 × 4 = 4를 더한 84예요.',
+    '곱해서 10이 넘으면 윗자리로 올려요. 올린 수는 윗자리를 곱한 뒤에 더해야 해요.',
+    '일의 자리, 십의 자리, 백의 자리 순서로 곱해요. 올림이 생기면 바로 윗자리에서 더해 주세요.',
+    '곱하는 수를 일의 자리와 십의 자리로 나눠서 두 번 곱해요. 십의 자리를 곱한 값은 한 칸 왼쪽으로 옮겨서(뒤에 0을 붙여서) 더해요.',
+    '먼저 일의 자리를 곱하고, 다음에 십의 자리를 곱해요. 두 번째 줄은 맨 끝에 0을 붙이는 걸 잊지 마세요.'];
+  var LABM = ['일', '십', '백', '천', '만'];
+
+  function genMLOne(lv) {
+    var a, b, t, u;
+    if (lv === 1) { b = rnd(2, 4); t = rnd(1, Math.floor(9 / b)); u = rnd(1, Math.floor(9 / b)); a = t * 10 + u; }
+    else if (lv === 2) { do { a = rnd(12, 99); b = rnd(2, 9); } while (a % 10 === 0 || ((a % 10) * b < 10 && Math.floor(a / 10) * b < 10)); }
+    else if (lv === 3) { do { a = rnd(101, 999); } while (a % 10 === 0); b = rnd(2, 9); }
+    else if (lv === 4) { do { a = rnd(12, 99); } while (a % 10 === 0); do { b = rnd(12, 99); } while (b % 10 === 0); }
+    else { do { a = rnd(101, 999); } while (a % 10 === 0); do { b = rnd(12, 99); } while (b % 10 === 0); }
+    return [a, b, 'x', lv];
+  }
+  function genML(lv, n) {
+    var out = [], seen = {}, tries = 0, l, f, k;
+    while (out.length < n && tries++ < 500) {
+      l = Array.isArray(lv) ? lv[rnd(0, lv.length - 1)] : (lv || rnd(1, 5));
+      f = genMLOne(l);
+      k = f.join('_');
+      if (!seen[k]) { seen[k] = 1; out.push(f); }
+    }
+    return out;
+  }
+
+  /* 한 자리 수 d를 곱하는 과정 (자리별) */
+  function mulDigits(a, d) {
+    var steps = [], c = 0, k, v, dg, txt, len = String(a).length;
+    for (k = 0; k < len; k++) {
+      dg = Math.floor(a / Math.pow(10, k)) % 10;
+      v = dg * d + c;
+      txt = LABM[k] + '의 자리: ' + dg + ' × ' + d + (c ? ' + ' + c + '(올림)' : '') + ' = ' + v;
+      if (k < len - 1) {
+        txt += v >= 10
+          ? '. ' + jo(v % 10, '을', '를') + ' 쓰고 ' + jo(Math.floor(v / 10), '을', '를') + ' 올려요.'
+          : '. ' + jo(v, '을', '를') + ' 써요.';
+      } else {
+        txt += '. ' + jo(v, '을', '를') + ' 그대로 써요.';
+      }
+      steps.push(txt);
+      c = Math.floor(v / 10);
+    }
+    return steps;
+  }
+  function explainML(q) {
+    var a = q.a, b = q.b, r = a * b, s;
+    if (b < 10) {
+      s = mulDigits(a, b);
+      s.push(a + ' × ' + b + ' = ' + r);
+      return s;
+    }
+    var u = b % 10, t = Math.floor(b / 10), p1 = a * u, p2 = a * t;
+    return [
+      { t: '먼저 ' + a + '에 일의 자리 ' + jo(u, '을', '를') + ' 곱해요: ' + a + ' × ' + u + ' = ' + p1, sub: u > 1 ? mulDigits(a, u) : null },
+      { t: '다음은 십의 자리 ' + jo(t, '을', '를') + ' 곱해요. 실제로는 ' + jo(t * 10, '을', '를') + ' 곱하는 것이라서 ' + a + ' × ' + t + ' = ' + p2 + ' 뒤에 0을 붙여 ' + jo(p2 * 10, '이', '가') + ' 돼요.', sub: t > 1 ? mulDigits(a, t) : null },
+      '두 결과를 더해요: ' + p1 + ' + ' + (p2 * 10) + ' = ' + r
+    ];
+  }
+
+  function makeChoicesML(q) {
+    var a = q.a, b = q.b, p = a * b, set = [p], c = [], k, i, v, u = b % 10, t = Math.floor(b / 10);
+    for (k = 1; k <= String(p).length - 1; k++) c.push(p + Math.pow(10, k), p - Math.pow(10, k));
+    c.push(p + a, p - a, p + 1, p - 1);
+    if (b >= 10) c.push(a * u + a * t, a * u + a * t * 10 + a, a * t * 10 + a * u * 10);
+    shuffle(c);
+    for (i = 0; i < c.length && set.length < 4; i++) {
+      v = c[i];
+      if (v > 0 && set.indexOf(v) < 0) set.push(v);
+    }
+    while (set.length < 4) {
+      v = p + rnd(-30, 30);
+      if (v > 0 && set.indexOf(v) < 0) set.push(v);
+    }
+    return shuffle(set);
+  }
+
+  function columnML(q) {
+    var a = q.a, b = q.b, r = a * b, two = b >= 10, n = String(r).length;
+    var cr = [], c = 0, k, v, head = '', marks = '', mk = [];
+    function pad(str) { while (str.length < n) str = ' ' + str; return str.split(''); }
+    function cells(arr, cls, zlast) {
+      return arr.map(function (ch, i) {
+        return '<span class="' + cls + (cls === 'res' && ch !== ' ' ? ' on' : '') + (zlast && i === arr.length - 1 ? ' z' : '') + '">' + (ch === ' ' ? '' : ch) + '</span>';
+      }).join('');
+    }
+    if (!two) {
+      for (k = 0; k < String(a).length; k++) {
+        v = (Math.floor(a / Math.pow(10, k)) % 10) * b + c;
+        c = Math.floor(v / 10);
+        cr[k] = c;
+      }
+      for (k = 0; k < n; k++) mk[k] = k > 0 && cr[k - 1] ? String(cr[k - 1]) : '';
+    }
+    for (k = n - 1; k >= 0; k--) {
+      head += '<span class="ch">' + LABM[k] + '</span>';
+      if (!two) marks += '<span class="mk">' + mk[k] + '</span>';
+    }
+    var h = '<div class="colcalc" style="grid-template-columns:2rem repeat(' + n + ',2.7rem)" role="img" aria-label="' + a + ' × ' + b + ' = ' + r + ' 세로셈">' +
+      '<span></span>' + head +
+      (two ? '' : '<span></span>' + marks) +
+      '<span></span>' + cells(pad(String(a)), 'dg') +
+      '<span class="op">×</span>' + cells(pad(String(b)), 'dg') +
+      '<i class="rule"></i>';
+    if (two) {
+      h += '<span></span>' + cells(pad(String(a * (b % 10))), 'pp') +
+        '<span></span>' + cells(pad(String(a * Math.floor(b / 10)) + '0'), 'pp', true) +
+        '<i class="rule"></i>';
+    }
+    return h + '<span></span>' + cells(pad(String(r)), 'res') + '</div>';
+  }
+
+  function levelBtnML(lv, sel) {
+    var info = lv ? LVM[lv] : ['모든 단계 섞기', '1~5단계를 골고루 풀어요'];
+    var best = store.ml.best[lv] || 0;
+    return '<button class="lvl" data-mlv="' + lv + '" aria-pressed="' + (sel === lv) + '">' +
+      '<span class="lvbadge">' + (lv ? lv + '단계' : '전체') + '</span>' +
+      '<span class="lvtext"><b>' + info[0] + '</b><span>' + info[1] + '</span></span>' +
+      '<span class="lvstars" role="img" aria-label="최고 별 ' + best + '개">' + starSvg(best >= 1, 0) + starSvg(best >= 2, 1) + starSvg(best >= 3, 2) + '</span></button>';
+  }
+
+  function renderML() {
+    var M = store.ml, lv = M.lv, i, lvHtml = '', cuBtns = '', cu = M.custom;
+    setHue(OPH.x);
+    for (i = 1; i <= 5; i++) lvHtml += levelBtnML(i, lv);
+    lvHtml += levelBtnML(0, lv);
+    for (i = 1; i <= 5; i++) cuBtns += '<button class="pick" data-mlvpick="' + i + '" style="--c:var(--h)" aria-pressed="' + (cu.indexOf(i) >= 0) + '">' + i + '단계</button>';
+    $('#mlHome').innerHTML =
+      '<div class="stats"><span class="stat">' + starSvg(true, 0) + '모은 별 <b>' + store.stars + '</b></span><span class="stat">맞힌 문제 <b>' + M.solved + '</b></span></div>' +
+      '<div class="box"><h3>단계 고르기</h3><div class="lvls" role="group" aria-label="단계 고르기">' + lvHtml + '</div></div>' +
+      '<div class="panel"><div class="panel-head"><h2>곱셈</h2><span class="sub" style="margin:0">' + (lv ? lv + '단계' : '모든 단계') + '</span></div>' +
+        '<div class="actions"><button class="btn primary" data-act="ml-learn">배우기</button><button class="btn" data-act="ml-practice">연습하기</button></div>' +
+        '<button class="btn wide" data-act="ml-challenge">도전하기 · 10문제</button>' +
+        '<p class="note">곱셈 놀이터는 제한 시간이 없어요. 천천히 풀어 보세요.</p></div>' +
+      '<div class="card box"><div><h3>범위를 정해서 도전하기</h3><p class="sub" style="margin:0;font-size:.9rem">고른 단계에서만 문제가 나와요.</p></div>' +
+        '<div class="picks three" role="group" aria-label="도전할 단계 고르기">' + cuBtns + '</div>' +
+        '<div class="pick-tools"><button class="btn small" data-act="ml-pickall">전체 선택</button><button class="btn small" data-act="ml-pickclear">모두 해제</button></div>' +
+        '<button class="btn primary wide" data-act="ml-custom"' + (cu.length ? '' : ' disabled') + '>' + (cu.length ? cu.join('·') + '단계 도전하기 · 10문제' : '단계를 하나 이상 골라 주세요') + '</button></div>';
+  }
+
+  /* 곱셈 배우기 */
+  function startLearnML() {
+    learnKind = 'ml';
+    ML = { selLv: store.ml.lv, q: null };
+    newML();
+    show('learn');
+    renderLearnML(true);
+  }
+  function newML() {
+    var lv = ML.selLv || rnd(1, 5), f, n = 0, prev = ML.q;
+    do { f = genMLOne(lv); n++; } while (prev && n < 6 && f[0] === prev.a && f[1] === prev.b);
+    ML.q = { a: f[0], b: f[1], op: 'x', lv: f[3] };
+  }
+  function renderLearnML(speakIt) {
+    var q = ML.q, r = calc(q);
+    setHue(OPH.x);
+    $('#learn').innerHTML =
+      '<header class="top"><button class="btn small" data-act="home">← 처음으로</button><h2 class="title">곱셈 배우기</h2>' + sndBtn() + '</header>' +
+      '<div class="card eq-card">' +
+        '<div class="eq sm" aria-live="polite"><span>' + q.a + '</span><span class="op">×</span><span>' + q.b + '</span><span class="op">=</span><span class="ans">' + r + '</span></div>' +
+        '<p class="read"><span class="lvbadge">' + q.lv + '단계</span>' + readQ(q) + '</p>' +
+      '</div>' +
+      '<div class="nav3">' +
+        '<button class="btn" data-act="ml-hear">듣기</button>' +
+        '<button class="btn primary" data-act="ml-other">다른 문제 보기</button>' +
+        '<button class="btn" data-act="ml-go">연습하러 가기</button>' +
+      '</div>' +
+      '<div class="card">' + columnML(q) + '</div>' +
+      '<div class="skip card"><h3>풀이 순서</h3>' + stepsHtml(q) + '</div>' +
+      '<div class="tip card"><h3>곱셈 비밀</h3><p>' + TIPSML[q.lv] + '</p></div>';
+    var nx = document.querySelector('#learn [data-act="ml-other"]');
+    if (nx) nx.focus({ preventScroll: true });
+    if (speakIt) speak(readQ(q));
+  }
+
   /* ---------- 문제 ---------- */
   var S = null;
 
@@ -927,6 +1134,7 @@ body { margin: 0; }
     var facts, b;
     if (opts.facts) facts = opts.facts.slice();
     else if (opts.kind === 'as') facts = genAS(opts.op, opts.lvs || opts.lv, 10);
+    else if (opts.kind === 'ml') facts = genML(opts.lvs || opts.lv, 10);
     else if (opts.mode === 'practice') {
       facts = [];
       for (b = 1; b <= 9; b++) facts.push([opts.dan, b]);
@@ -939,7 +1147,7 @@ body { margin: 0; }
       idx: 0, total: facts.length, ok: 0, miss: [], streak: 0, best: 0,
       t0: Date.now(), locked: false, input: '', timer: null,
       raf: 0, left: 0, deadline: 0, lockedAt: 0, late: 0,
-      limit: 5000, maxLen: opts.kind === 'as' ? 4 : 2
+      limit: 5000, maxLen: opts.kind === 'ml' ? 5 : opts.kind === 'as' ? 4 : 2
     };
     show('quiz');
     renderQuiz();
@@ -954,9 +1162,9 @@ body { margin: 0; }
     var h =
       '<header class="top"><button class="btn small" data-act="home">← 그만하기</button>' +
       '<div class="prog" role="progressbar" aria-label="진행" aria-valuemin="0" aria-valuemax="' + S.queue.length + '" aria-valuenow="' + S.idx + '"><i style="width:' + pct + '%"></i></div>' + sndBtn() + '</header>' +
-      '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + (S.opts.dans ? ' · ' + S.opts.dans.join('·') + '단' : S.opts.kind === 'as' ? ' · ' + (S.opts.op === 'm' ? '섞어서' : OPN[S.opts.op]) + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : '') + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
-      '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">5</b></div>' +
-      '<div class="card q-card"><div class="q' + (opOf(q) === '*' ? '' : ' sm' + (q.lv >= 5 ? ' xl' : '')) + '"><span>' + q.a + '</span><span class="op">' + sym(q) + '</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div></div>';
+      '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + (S.opts.dans ? ' · ' + S.opts.dans.join('·') + '단' : S.opts.kind === 'ml' ? ' · 곱셈' + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : S.opts.kind === 'as' ? ' · ' + (S.opts.op === 'm' ? '섞어서' : OPN[S.opts.op]) + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : '') + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
+      (limitOf(q) ? '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">5</b></div>' : '') +
+      '<div class="card q-card"><div class="q' + (opOf(q) === '*' ? '' : ' sm' + (q.lv >= 5 || q.op === 'x' ? ' xl' : '')) + '"><span>' + q.a + '</span><span class="op">' + sym(q) + '</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div></div>';
     if (S.mode === 'practice') {
       h += '<div class="choices">' + q.opts.map(function (v, i) {
         return '<button class="choice" data-v="' + v + '"><kbd>' + (i + 1) + '</kbd>' + v + '</button>';
@@ -991,6 +1199,7 @@ body { margin: 0; }
       if (ok) {
         S.ok++;
         if (isMul) setLvl(q.a, q.b, Math.max(cur, Math.min(cap, cur + 1)));
+        else if (q.op === 'x') store.ml.solved++;
         else store.as.solved++;
       } else {
         S.miss.push([q.a, q.b, q.op, q.lv]);
@@ -1048,6 +1257,7 @@ body { margin: 0; }
   function startTimer() {
     stopTimer();
     S.limit = limitOf(S.queue[S.idx]);
+    if (!S.limit) { S.left = 0; return; }   /* 제한 시간 없음 */
     S.left = S.limit;
     S.deadline = performance.now() + S.limit;
     paintTimer();
@@ -1055,7 +1265,7 @@ body { margin: 0; }
   }
   /* 다른 탭으로 나가 있는 동안에는 시간이 흐르지 않는다 */
   document.addEventListener('visibilitychange', function () {
-    if (!S || S.locked || $('#quiz').hidden) return;
+    if (!S || S.locked || !S.limit || $('#quiz').hidden) return;
     if (document.hidden) {
       stopTimer();
       S.left = Math.max(0, S.deadline - performance.now());
@@ -1089,6 +1299,7 @@ body { margin: 0; }
       var bk = S.opts.op + ':' + S.opts.lv;
       store.as.best[bk] = Math.max(store.as.best[bk] || 0, stars);
     }
+    if (S.opts.kind === 'ml' && !S.opts.facts && !S.opts.lvs) store.ml.best[S.opts.lv] = Math.max(store.ml.best[S.opts.lv] || 0, stars);
     save();
     tone([523, 659, 784, 1047], 0.14);
     var sec = Math.round((Date.now() - S.t0) / 1000);
@@ -1144,6 +1355,14 @@ body { margin: 0; }
     else if (act === 'as-pickall') { store.as.custom = [1, 2, 3, 4, 5, 6]; save(); renderAS(); }
     else if (act === 'as-pickclear') { store.as.custom = []; save(); renderAS(); }
     else if (act === 'as-hear') { var wasAs = store.sound; store.sound = true; speak(readQ(AL.q)); store.sound = wasAs; }
+    else if (act === 'ml-learn') startLearnML();
+    else if (act === 'ml-practice' || act === 'ml-go') startSession({ mode: 'practice', kind: 'ml', lv: store.ml.lv });
+    else if (act === 'ml-challenge') startSession({ mode: 'challenge', kind: 'ml', lv: store.ml.lv });
+    else if (act === 'ml-other') { newML(); renderLearnML(true); }
+    else if (act === 'ml-hear') { var wasMl = store.sound; store.sound = true; speak(readQ(ML.q)); store.sound = wasMl; }
+    else if (act === 'ml-custom') { if (store.ml.custom.length) startSession({ mode: 'challenge', kind: 'ml', lvs: store.ml.custom.slice() }); }
+    else if (act === 'ml-pickall') { store.ml.custom = [1, 2, 3, 4, 5]; save(); renderML(); }
+    else if (act === 'ml-pickclear') { store.ml.custom = []; save(); renderML(); }
     else if (act === 'custom') { if (store.custom.length) startSession({ mode: 'challenge', dans: store.custom.slice() }); }
     else if (act === 'pickall') { store.custom = [2, 3, 4, 5, 6, 7, 8, 9]; save(); renderCustom(); }
     else if (act === 'pickclear') { store.custom = []; save(); renderCustom(); }
@@ -1162,6 +1381,20 @@ body { margin: 0; }
       save(); renderAS();
       var lpBtn = document.querySelector('[data-lvpick="' + lp + '"]');
       if (lpBtn) lpBtn.focus({ preventScroll: true });
+    }
+    else if (t.dataset.mlvpick) {
+      var mp = +t.dataset.mlvpick, mpi = store.ml.custom.indexOf(mp);
+      if (mpi >= 0) store.ml.custom.splice(mpi, 1);
+      else { store.ml.custom.push(mp); store.ml.custom.sort(function (x, y) { return x - y; }); }
+      save(); renderML();
+      var mpBtn = document.querySelector('[data-mlvpick="' + mp + '"]');
+      if (mpBtn) mpBtn.focus({ preventScroll: true });
+    }
+    else if (t.dataset.mlv) {
+      var mlSel = +t.dataset.mlv;
+      store.ml.lv = mlSel; save(); renderML();
+      var mlBtn = document.querySelector('.lvl[data-mlv="' + mlSel + '"]');
+      if (mlBtn) mlBtn.focus({ preventScroll: true });
     }
     else if (t.dataset.tab) { store.tab = t.dataset.tab; save(); renderHome(); }
     else if (t.dataset.op) {
