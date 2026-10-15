@@ -483,7 +483,7 @@ body { margin: 0; }
     return (n < 20 ? '' : SD[Math.floor(n / 10)]) + '십' + (n % 10 ? SD[n % 10] : '');
   }
   function eun(w) { return ((w.charCodeAt(w.length - 1) - 0xAC00) % 28) ? '은' : '는'; }
-  function reading(a, b) { return sino(a) + ' 곱하기 ' + sino(b) + eun(sino(b)) + ' ' + sino(a * b); }
+  function reading(a, b) { return sino(a) + ' ' + sino(b) + eun(sino(b)) + ' ' + sino(a * b); }  /* 구구단 읽기: '이 이는 사' */
 
   /* ---------- 소리 ---------- */
   var ac = null;
