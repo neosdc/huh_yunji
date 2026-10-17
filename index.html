@@ -618,7 +618,7 @@ body { margin: 0; }
     $('#panel').innerHTML =
       '<div class="panel-head"><h2>' + store.sel + '단</h2><span class="sub" style="margin:0">' + rowDone + '/9칸 익혔어요</span></div>' +
       '<div class="actions"><button class="btn primary" data-act="learn">배우기</button><button class="btn" data-act="practice">연습하기</button></div>' +
-      '<p class="note">연습하기와 도전하기는 문제마다 5초 안에 답해야 해요.</p>';
+      '<p class="note">연습하기와 도전하기는 문제마다 10초 안에 답해야 해요.</p>';
     renderCustom();
     show('home');
   }
@@ -690,14 +690,14 @@ body { margin: 0; }
       '일의 자리부터 빼요. 뺄 수 없으면 윗자리에서 10을 빌려 오고, 빌려준 자리는 1 줄여요.',
       '십의 자리가 0이면 백의 자리에서 빌려 와요. 빌려준 자리마다 1씩 줄여서 빼요.']
   };
-  var ASLIM = [5000, 5000, 5000, 10000, 15000, 20000, 25000];
+  var ASLIM = [10000, 10000, 10000, 10000, 15000, 20000, 25000];
 
   function rnd(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
   function opOf(q) { return q.op || '*'; }
   function sym(q) { var o = opOf(q); return o === '+' ? '+' : o === '-' ? '−' : '×'; }  /* '*'(구구단)와 'x'(곱셈 놀이터)는 모두 × */
   function calc(q) { var o = opOf(q); return o === '+' ? q.a + q.b : o === '-' ? q.a - q.b : q.a * q.b; }
   function hueOf(q) { var o = opOf(q); return o === '+' ? 6 : o === '-' ? 8 : o === 'x' ? OPH.x : q.a; }
-  function limitOf(q) { var o = opOf(q); return o === 'x' ? 0 : o === '*' ? 5000 : ASLIM[q.lv]; }  /* 0 = 제한 시간 없음 */
+  function limitOf(q) { var o = opOf(q); return o === 'x' ? 0 : o === '*' ? 10000 : ASLIM[q.lv]; }  /* 0 = 제한 시간 없음 */
   function hasFinal(n) { var w = sino(n); return ((w.charCodeAt(w.length - 1) - 0xAC00) % 28) !== 0; }
   function jo(n, yes, no) { return n + (hasFinal(n) ? yes : no); }
   function ro(n) { var w = sino(n), f = (w.charCodeAt(w.length - 1) - 0xAC00) % 28; return n + ((f === 0 || f === 8) ? '로' : '으로'); }
@@ -881,7 +881,7 @@ body { margin: 0; }
       '<div class="panel"><div class="panel-head"><h2>' + OPN[op] + '</h2><span class="sub" style="margin:0">' + (lv ? lv + '단계' : '모든 단계') + '</span></div>' +
         '<div class="actions"><button class="btn primary" data-act="as-learn">배우기</button><button class="btn" data-act="as-practice">연습하기</button></div>' +
         '<button class="btn wide" data-act="as-challenge">도전하기 · 10문제</button>' +
-        '<p class="note">연습하기와 도전하기는 1·2단계 5초, 3단계 10초, 4단계 15초, 5단계 20초, 6단계 25초 안에 답해야 해요.</p></div>' + cuHtml;
+        '<p class="note">연습하기와 도전하기는 1~3단계 10초, 4단계 15초, 5단계 20초, 6단계 25초 안에 답해야 해요.</p></div>' + cuHtml;
   }
 
   /* 덧셈·뺄셈 배우기 */
@@ -1206,7 +1206,7 @@ body { margin: 0; }
       idx: 0, total: facts.length, ok: 0, miss: [], streak: 0, best: 0,
       t0: Date.now(), locked: false, input: '', timer: null,
       raf: 0, left: 0, deadline: 0, lockedAt: 0, late: 0,
-      limit: 5000, maxLen: opts.kind === 'ml' ? 5 : opts.kind === 'as' ? 4 : 2
+      limit: 10000, maxLen: opts.kind === 'ml' ? 5 : opts.kind === 'as' ? 4 : 2
     };
     show('quiz');
     renderQuiz();
@@ -1222,7 +1222,7 @@ body { margin: 0; }
       '<header class="top"><button class="btn small" data-act="home">← 그만하기</button>' +
       '<div class="prog" role="progressbar" aria-label="진행" aria-valuemin="0" aria-valuemax="' + S.queue.length + '" aria-valuenow="' + S.idx + '"><i style="width:' + pct + '%"></i></div>' + sndBtn() + '</header>' +
       '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + (S.opts.dans ? ' · ' + S.opts.dans.join('·') + '단' : S.opts.kind === 'ml' ? ' · 곱셈' + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : S.opts.kind === 'as' ? ' · ' + (S.opts.op === 'm' ? '섞어서' : OPN[S.opts.op]) + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : '') + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
-      (limitOf(q) ? '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">5</b></div>' : '') +
+      (limitOf(q) ? '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">10</b></div>' : '') +
       (opOf(q) === '*' ? nyRow('sm', '', 'nyBubble') : '') +
       '<div class="card q-card"><div class="q' + (opOf(q) === '*' ? '' : ' sm' + (q.lv >= 5 || q.op === 'x' ? ' xl' : '')) + '"><span>' + q.a + '</span><span class="op">' + sym(q) + '</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div></div>';
     if (S.mode === 'practice') {
@@ -1297,7 +1297,7 @@ body { margin: 0; }
     }
   }
 
-  /* ---------- 5초 제한 ---------- */
+  /* ---------- 제한 시간 ---------- */
   function paintTimer() {
     var bar = $('#tbar'), num = $('#tnum'), box = $('#tbox');
     if (!bar || !S) return;
