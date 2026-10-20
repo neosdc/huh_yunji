@@ -119,7 +119,7 @@
    - 승인된 리디렉션 URI에 `https://<프로젝트 ID>.supabase.co/auth/v1/callback`을 넣습니다.
    - Supabase 대시보드 **Authentication > Sign In / Providers > Google**에서 켜고 클라이언트 ID와 보안 비밀을 넣습니다.
 4. **Authentication > URL Configuration**에서 Site URL을 배포 주소(예: `https://<계정>.github.io/huh_yunji/`)로 하고, Redirect URLs에 배포 주소와 로컬 개발 주소(예: `http://localhost:8000/`)를 추가합니다. 여기 없는 주소에서는 로그인이 거부됩니다.
-5. **Project Settings > API**의 Project URL과 `anon` 공개 키를 `index.html` 위쪽의 설정에 넣습니다.
+5. 프로젝트 화면의 **Connect** 버튼에서 Project URL과 **publishable 키**(`sb_publishable_...`)를 확인해 `index.html` 위쪽의 설정에 넣습니다. 예전 방식의 `anon` 키(Settings > API Keys의 Legacy 탭)도 같은 칸에 넣으면 동작합니다. 변수 이름이 `supabaseAnonKey`인 것은 그 때문입니다.
 
 ```html
 <script>window.GUGUDAN_CONFIG = { supabaseUrl: 'https://xxxx.supabase.co', supabaseAnonKey: '...' };</script>
@@ -147,7 +147,7 @@ update public.members set status = 'blocked', decided_at = now() where email = '
 
 ### 보안과 한계
 
-- `anon` 키는 브라우저에 그대로 보이는 **공개 값**이라 코드에 넣어도 됩니다. `service_role` 키는 절대 넣지 마세요.
+- publishable 키(또는 legacy `anon` 키)는 브라우저에 그대로 보이는 **공개 값**이라 코드에 넣어도 됩니다. `sb_secret_...`와 `service_role` 키는 RLS를 우회하는 관리자 키이므로 절대 넣지 마세요.
 - 데이터는 Supabase의 **행 단위 접근 제어(RLS)**로 지킵니다. 로그인하지 않은 요청은 어떤 테이블도 읽거나 쓸 수 없고, 승인되지 않은 계정도 마찬가지입니다. 승인된 계정은 자기 프로필과 그 프로필에 딸린 데이터만 읽고 쓸 수 있습니다. 풀이 기록은 추가와 조회만 되고 고치거나 지울 수 없으며(프로필을 지울 때 함께 지워짐), 프로필은 계정당 6개까지입니다. `supabase/schema.sql`에 정책이 모두 들어 있습니다.
 - 정적 호스팅이라 로그인 화면은 **보기 위한 문 역할**입니다. `index.html`과 JavaScript 코드는 누구나 내려받아 볼 수 있습니다. 로그인하지 않은 사람이 볼 수 없는 것은 **저장된 사용자 데이터**입니다. 게임 코드 자체를 숨겨야 한다면 서버에서 인증을 확인하고 파일을 내려 주는 호스팅이 필요합니다.
 - 로그인 정보(세션)는 브라우저에 저장되어 새로고침해도 유지됩니다. 로그아웃하면 이 기기에 남긴 미전송 기록은 그대로 두고, 화면의 데이터만 비웁니다.
