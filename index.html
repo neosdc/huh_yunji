@@ -1669,6 +1669,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: '', supabaseAnonKey: '' };
     if (kind === 'loading') body = '<p class="msg">불러오는 중이에요…</p>';
     else if (kind === 'config') body = '<p class="msg">서비스 연결 설정이 아직 없어요.</p><p class="msg">관리하는 분은 <code>index.html</code>의 <code>GUGUDAN_CONFIG</code>에 Supabase 주소와 공개 키를 넣어 주세요. 자세한 방법은 README의 "로그인과 데이터 저장"에 있어요.</p>';
     else if (kind === 'lib') body = '<p class="msg">로그인 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p><button class="btn primary wide" data-act="retry">다시 시도</button>';
+    else if (kind === 'pending') body = '<p class="msg"><b>가입 신청이 접수됐어요.</b></p><p class="msg">관리자가 승인하면 쓸 수 있어요. 승인되면 아래 버튼으로 다시 확인해 주세요.</p>' + (detail ? '<p class="msg">계정: ' + esc(detail) + '</p>' : '') + '<button class="btn primary wide" data-act="retry">승인 확인</button><button class="btn wide" data-act="logout">로그아웃</button>';
+    else if (kind === 'blocked') body = '<p class="msg">이 계정은 지금 쓸 수 없어요.</p><p class="msg">관리자에게 문의해 주세요.</p>' + (detail ? '<p class="msg">계정: ' + esc(detail) + '</p>' : '') + '<button class="btn wide" data-act="logout">로그아웃</button>';
     else if (kind === 'error') body = '<p class="msg">정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p><button class="btn primary wide" data-act="retry">다시 시도</button><button class="btn wide" data-act="logout">로그아웃</button>';
     else body = '<p class="msg">부모님 계정으로 로그인하면 아이별로 진행 상황이 저장돼요.</p><button class="gbtn" data-act="login">' + GOOGLE_G + 'Google 계정으로 로그인</button>' + (detail ? '<p class="err" role="alert">' + esc(detail) + '</p>' : '');
     $('#auth').innerHTML = '<div class="gate"><h1>구구단 놀이터</h1><div class="card">' + body + '</div></div>';
@@ -1728,7 +1730,14 @@ window.GUGUDAN_CONFIG = { supabaseUrl: '', supabaseAnonKey: '' };
 
   function afterLogin() {
     showGate('loading');
-    return fetchProfiles().then(function (list) {
+    return Promise.resolve(sb.from('members').select('status').eq('user_id', user.id).maybeSingle()).then(function (r) {
+      if (r.error) throw r.error;
+      var st = r.data && r.data.status, who = user && user.email ? user.email : '';
+      if (st === 'blocked') { showGate('blocked', who); return null; }
+      if (st !== 'approved') { showGate('pending', who); return null; }
+      return fetchProfiles();
+    }).then(function (list) {
+      if (!list) return;
       profiles = list;
       var last = lastProfileId(), pick = list.filter(function (p) { return p.id === last; })[0];
       if (pick) return selectProfile(pick);

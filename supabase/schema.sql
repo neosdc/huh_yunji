@@ -11,6 +11,53 @@
 --   앱의 anon 키는 공개되는 값이라, 데이터는 전부 행 단위 접근 제어(RLS)로 지킵니다.
 --   모든 테이블에서 RLS를 켜고, 로그인한 본인 계정의 프로필에 딸린 행만 읽고 쓸 수 있게 합니다.
 --   로그인하지 않은 요청(anon 역할)은 어떤 테이블도 읽거나 쓸 수 없습니다.
+--
+-- 가입 승인
+--   Google로 처음 로그인하면 members 에 'pending'(승인 대기) 행이 자동으로 생깁니다.
+--   관리자가 status 를 'approved' 로 바꿔 주기 전에는 프로필·진행·기록 어디에도 읽거나 쓸 수 없습니다(RLS 로 막음).
+--   승인:  update public.members set status = 'approved', decided_at = now() where email = '부모님@gmail.com';
+--   차단:  update public.members set status = 'blocked'  ... (승인했던 계정도 바로 접근이 막힙니다)
+--   이 스크립트를 처음 실행할 때 이미 가입해 있던 계정은 자동으로 승인 처리됩니다.
+
+-- 0) 가입 승인 -----------------------------------------------------------------
+create table if not exists public.members (
+  user_id    uuid primary key references auth.users (id) on delete cascade,
+  email      text,
+  status     text not null default 'pending' check (status in ('pending', 'approved', 'blocked')),
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
+);
+create index if not exists members_status_idx on public.members (status);
+
+-- 새 계정이 생기면 승인 대기 행을 만듭니다.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  insert into public.members (user_id, email) values (new.id, new.email) on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- 이미 있던 계정은 승인 처리(이 스크립트를 처음 실행할 때만 의미가 있고, 이미 행이 있으면 건드리지 않음)
+insert into public.members (user_id, email, status, decided_at)
+  select id, email, 'approved', now() from auth.users
+  on conflict (user_id) do nothing;
+
+create or replace function public.is_approved()
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (select 1 from public.members m where m.user_id = (select auth.uid()) and m.status = 'approved');
+$$;
+revoke all on function public.is_approved() from public, anon;
+grant execute on function public.is_approved() to authenticated;
 
 -- 1) 아이 프로필 ---------------------------------------------------------------
 create table if not exists public.profiles (
@@ -49,6 +96,7 @@ create table if not exists public.attempts (
 create index if not exists attempts_profile_time_idx on public.attempts (profile_id, played_at desc);
 
 -- 4) 접근 제어 ------------------------------------------------------------------
+alter table public.members       enable row level security;
 alter table public.profiles      enable row level security;
 alter table public.profile_state enable row level security;
 alter table public.attempts      enable row level security;
@@ -61,7 +109,7 @@ as $$
   select exists (
     select 1 from public.profiles p
     where p.id = pid and p.owner_id = (select auth.uid())
-  );
+  ) and public.is_approved();
 $$;
 
 create or replace function public.my_profile_count()
@@ -78,26 +126,32 @@ grant execute on function public.my_profile_count()  to authenticated;
 
 -- Supabase는 새 테이블에 anon/authenticated 권한을 기본으로 넓게 줍니다. 먼저 모두 거두고 필요한 것만 다시 줍니다.
 -- 로그인하지 않은 요청(anon)은 테이블에 아예 손댈 수 없고, 풀이 기록은 읽기·추가만 됩니다.
-revoke all on public.profiles, public.profile_state, public.attempts from anon, authenticated;
+revoke all on public.members, public.profiles, public.profile_state, public.attempts from anon, authenticated;
+-- members 는 본인 행 읽기만 됩니다. 승인·차단은 대시보드(SQL Editor)에서만 합니다.
+grant select on public.members to authenticated;
 grant select, insert, update, delete on public.profiles      to authenticated;
 grant select, insert, update, delete on public.profile_state to authenticated;
 grant select, insert                 on public.attempts      to authenticated;
 
 -- 정책: 다시 실행해도 되도록 지우고 만듭니다.
+drop policy if exists members_select on public.members;
+create policy members_select on public.members for select to authenticated
+  using (user_id = (select auth.uid()));
+
 drop policy if exists profiles_select on public.profiles;
 drop policy if exists profiles_insert on public.profiles;
 drop policy if exists profiles_update on public.profiles;
 drop policy if exists profiles_delete on public.profiles;
 
 create policy profiles_select on public.profiles for select to authenticated
-  using (owner_id = (select auth.uid()));
+  using (owner_id = (select auth.uid()) and public.is_approved());
 -- 한 계정에 프로필은 최대 6개까지
 create policy profiles_insert on public.profiles for insert to authenticated
-  with check (owner_id = (select auth.uid()) and public.my_profile_count() < 6);
+  with check (owner_id = (select auth.uid()) and public.is_approved() and public.my_profile_count() < 6);
 create policy profiles_update on public.profiles for update to authenticated
-  using (owner_id = (select auth.uid())) with check (owner_id = (select auth.uid()));
+  using (owner_id = (select auth.uid()) and public.is_approved()) with check (owner_id = (select auth.uid()) and public.is_approved());
 create policy profiles_delete on public.profiles for delete to authenticated
-  using (owner_id = (select auth.uid()));
+  using (owner_id = (select auth.uid()) and public.is_approved());
 
 drop policy if exists state_all on public.profile_state;
 create policy state_all on public.profile_state for all to authenticated
