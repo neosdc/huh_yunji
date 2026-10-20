@@ -355,12 +355,45 @@ body { margin: 0; }
 .nyang-row.float { animation: floaty 3.6s ease-in-out infinite; }
 @keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-12px) rotate(1.5deg); } }
 @media (prefers-reduced-motion: reduce) { .nyang-row.float, .bubble.say { animation: none; } }
+
+/* 로그인 · 프로필 */
+.acct-bar { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; min-height: 2.2rem; }
+.acct-bar .btn { max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.syncerr { color: var(--bad); font-size: .85rem; }
+.gate { display: flex; flex-direction: column; gap: 1rem; align-items: stretch; margin-top: 12vh; text-align: center; }
+.gate h1 { margin: 0; }
+.gate .card { display: flex; flex-direction: column; gap: .9rem; }
+.msg { color: var(--ink-2); font-size: 1rem; line-height: 1.5; }
+.err { color: var(--bad); font-size: .95rem; }
+.gbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .7rem; width: 100%; min-height: 3.2rem;
+  padding: .5rem 1rem; background: #fff; color: #1f1f1f; font-family: var(--font-b); font-size: 1.05rem; font-weight: 700;
+  border: 2.5px solid var(--edge); border-radius: 14px; box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.gbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.gbtn svg { width: 1.4rem; height: 1.4rem; flex: none; }
+.plist { display: flex; flex-direction: column; gap: .6rem; }
+.prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; align-items: stretch; }
+.prow .prof { text-align: left; font-size: 1.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prow .prof[aria-pressed="true"]::after { content: ' (지금 이 프로필)'; font-family: var(--font-b); font-size: .85rem; color: var(--ink-2); }
+.btn.danger { color: var(--bad); }
+.field {
+  width: 100%; min-height: 3rem; padding: .5rem .8rem; font: inherit; font-size: 1.1rem; color: var(--ink);
+  background: var(--card); border: 2.5px solid var(--edge); border-radius: 12px;
+}
+.check { display: flex; gap: .6rem; align-items: flex-start; text-align: left; font-size: .95rem; }
+.check input { width: 1.3rem; height: 1.3rem; margin-top: .1rem; flex: none; }
+.acct-foot { display: flex; align-items: center; justify-content: space-between; gap: .8rem; color: var(--ink-2); font-size: .9rem; flex-wrap: wrap; }
+.acct-foot span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
 
-  <section id="home">
+  <section id="auth" hidden></section>
+  <section id="profiles" hidden></section>
+
+  <section id="home" hidden>
     <header class="top">
       <div>
         <h1 id="homeTitle">구구단 놀이터</h1>
@@ -368,6 +401,7 @@ body { margin: 0; }
       </div>
       <span data-slot="snd"></span>
     </header>
+    <div class="acct-bar" data-slot="acct"></div>
     <div class="tabs" role="group" aria-label="놀이터 고르기">
       <button class="tab" id="tab-mul" data-tab="mul" aria-pressed="true">구구단</button>
       <button class="tab" id="tab-as" data-tab="as" aria-pressed="false">덧셈·뺄셈</button>
@@ -410,6 +444,12 @@ body { margin: 0; }
 </div>
 
 <script>
+/* 서비스 연결 설정 (Supabase). 프로젝트 URL과 anon(공개) 키를 넣어 주세요. README의 "로그인과 데이터 저장"을 참고하세요.
+   anon 키는 공개되는 값이라 코드에 들어가도 괜찮습니다. 데이터는 DB의 접근 제어(RLS)가 지킵니다. */
+window.GUGUDAN_CONFIG = { supabaseUrl: '', supabasePublishableKey: '' };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script>
 (function () {
   'use strict';
 
@@ -435,38 +475,128 @@ body { margin: 0; }
     return a;
   }
 
-  /* ---------- 저장 ---------- */
-  var store = (function () {
-    try {
-      var s = JSON.parse(localStorage.getItem(SKEY));
-      if (s && s.facts) return s;
-    } catch (e) {}
-    return { facts: {}, stars: 0, sound: true, sel: 2 };
-  })();
-  if (!(store.sel >= 2 && store.sel <= 9)) store.sel = 2;
-  if (!Array.isArray(store.custom)) store.custom = [2, 3, 4];
-  store.custom = store.custom.filter(function (d, i, arr) {
-    return d >= 2 && d <= 9 && arr.indexOf(d) === i;
-  }).sort(function (x, y) { return x - y; });
-  if (store.tab !== 'as' && store.tab !== 'ml') store.tab = 'mul';
-  if (!store.ml || typeof store.ml !== 'object') store.ml = {};
-  if (!(store.ml.lv >= 0 && store.ml.lv <= 5)) store.ml.lv = 1;
-  if (!store.ml.best || typeof store.ml.best !== 'object') store.ml.best = {};
-  store.ml.solved = +store.ml.solved || 0;
-  if (!Array.isArray(store.ml.custom)) store.ml.custom = [1, 2];
-  store.ml.custom = store.ml.custom.filter(function (d, i, arr) {
-    return d >= 1 && d <= 5 && arr.indexOf(d) === i;
-  }).sort(function (x, y) { return x - y; });
-  if (!store.as || typeof store.as !== 'object') store.as = {};
-  if (['+', '-', 'm'].indexOf(store.as.op) < 0) store.as.op = '+';
-  if (!(store.as.lv >= 0 && store.as.lv <= 6)) store.as.lv = 1;
-  if (!store.as.best || typeof store.as.best !== 'object') store.as.best = {};
-  store.as.solved = +store.as.solved || 0;
-  if (!Array.isArray(store.as.custom)) store.as.custom = [1, 2];
-  store.as.custom = store.as.custom.filter(function (d, i, arr) {
-    return d >= 1 && d <= 6 && arr.indexOf(d) === i;
-  }).sort(function (x, y) { return x - y; });
-  function save() { try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {} }
+  /* ---------- 저장 (서버: Supabase) ---------- */
+  var SKEY = 'gugudan-nori-v1';             /* 로그인 기능 이전에 이 기기에 저장되던 진행 상황(가져오기용으로만 읽음) */
+  var PKEY = 'gugudan-nori-v2:pending:';    /* 서버에 아직 못 올린 진행 상황 (+프로필 id) */
+  var AKEY = 'gugudan-nori-v2:attempts:';   /* 서버에 아직 못 올린 풀이 기록 (+프로필 id) */
+  var LKEY = 'gugudan-nori-v2:last:';       /* 마지막에 고른 프로필 (+사용자 id) */
+  var IKEY = 'gugudan-nori-v2:imported';    /* 예전 진행 상황을 이미 가져왔는지 */
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  function lsJson(k) { try { return JSON.parse(lsGet(k)); } catch (e) { return null; } }
+
+  function freshStore() { return { facts: {}, stars: 0, sound: true, sel: 2 }; }
+  function inRange(list, lo, hi) {
+    return list.filter(function (d, i, arr) { return d >= lo && d <= hi && arr.indexOf(d) === i; }).sort(function (x, y) { return x - y; });
+  }
+  function normalize(s) {
+    if (!s || typeof s !== 'object') s = {};
+    if (!s.facts || typeof s.facts !== 'object') s.facts = {};
+    s.stars = +s.stars || 0;
+    s.sound = s.sound !== false;
+    if (!(s.sel >= 2 && s.sel <= 9)) s.sel = 2;
+    s.custom = inRange(Array.isArray(s.custom) ? s.custom : [2, 3, 4], 2, 9);
+    if (s.tab !== 'as' && s.tab !== 'ml') s.tab = 'mul';
+    if (!s.ml || typeof s.ml !== 'object') s.ml = {};
+    if (!(s.ml.lv >= 0 && s.ml.lv <= 5)) s.ml.lv = 1;
+    if (!s.ml.best || typeof s.ml.best !== 'object') s.ml.best = {};
+    s.ml.solved = +s.ml.solved || 0;
+    s.ml.custom = inRange(Array.isArray(s.ml.custom) ? s.ml.custom : [1, 2], 1, 5);
+    if (!s.as || typeof s.as !== 'object') s.as = {};
+    if (['+', '-', 'm'].indexOf(s.as.op) < 0) s.as.op = '+';
+    if (!(s.as.lv >= 0 && s.as.lv <= 6)) s.as.lv = 1;
+    if (!s.as.best || typeof s.as.best !== 'object') s.as.best = {};
+    s.as.solved = +s.as.solved || 0;
+    s.as.custom = inRange(Array.isArray(s.as.custom) ? s.as.custom : [1, 2], 1, 6);
+    return s;
+  }
+  var store = normalize(freshStore());
+
+  /* 로그인한 사용자와 고른 아이 프로필 */
+  var CFG = window.GUGUDAN_CONFIG || {};
+  var sb = null, user = null, profile = null, profiles = [];
+  var SYNC = { timer: 0, inflight: false, again: false, p: null, bad: false };
+  var AQ = [];            /* 아직 서버로 보내지 않은 풀이 기록 */
+  var AFLY = false;
+
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function readLegacy() { var v = lsJson(SKEY); return v && v.facts && typeof v.facts === 'object' ? v : null; }
+  function hasProgress(s) { return !!(s && ((+s.stars || 0) > 0 || (s.facts && Object.keys(s.facts).length))); }
+  function pendingOf(pid) {
+    var v = lsJson(PKEY + pid);
+    return v && v.progress && typeof v.at === 'number' ? v : null;
+  }
+  function progressOf(s) { var c = JSON.parse(JSON.stringify(s)); delete c.sound; return c; }
+  function setSyncMsg(bad) {
+    SYNC.bad = !!bad;
+    var el = document.getElementById('syncErr');
+    if (el) el.hidden = !bad;
+  }
+
+  /* 진행 상황을 바꿀 때마다 부른다. 기기에 먼저 적어 두고, 잠시 뒤 서버로 올린다. */
+  function save() {
+    if (!profile) return;
+    lsSet(PKEY + profile.id, JSON.stringify({ at: Date.now(), progress: progressOf(store), settings: { sound: store.sound } }));
+    clearTimeout(SYNC.timer);
+    SYNC.timer = setTimeout(pushState, 1200);
+  }
+  function pushState() {
+    clearTimeout(SYNC.timer);
+    if (!sb || !profile) return Promise.resolve();
+    if (SYNC.inflight) { SYNC.again = true; return SYNC.p; }
+    var pid = profile.id, snap = pendingOf(pid);
+    if (!snap) return Promise.resolve();
+    SYNC.inflight = true;
+    SYNC.p = Promise.resolve(sb.from('profile_state').upsert(
+      { profile_id: pid, progress: snap.progress, settings: snap.settings || {}, updated_at: new Date(snap.at).toISOString() },
+      { onConflict: 'profile_id' }
+    )).then(function (r) {
+      if (r && r.error) throw r.error;
+      var cur = pendingOf(pid);
+      if (cur && cur.at === snap.at) lsDel(PKEY + pid);
+      SYNC.inflight = false;
+      setSyncMsg(false);
+      if (SYNC.again) { SYNC.again = false; return pushState(); }
+    }).catch(function () {
+      SYNC.inflight = false; SYNC.again = false;
+      setSyncMsg(true);
+      SYNC.timer = setTimeout(pushState, 8000);
+    });
+    return SYNC.p;
+  }
+
+  /* 풀이 기록: 모았다가 열 개가 되거나 화면을 떠날 때 한꺼번에 올린다. */
+  function kindOf(op) { return op === '*' ? 'mul' : op === 'x' ? 'ml' : 'as'; }
+  function persistAttempts() {
+    if (!profile) return;
+    if (AQ.length) lsSet(AKEY + profile.id, JSON.stringify(AQ)); else lsDel(AKEY + profile.id);
+  }
+  function logAttempt(q, ok, timedOut, val) {
+    if (!profile) return;
+    var op = opOf(q);
+    AQ.push({
+      profile_id: profile.id, played_at: new Date().toISOString(), mode: S.mode, kind: kindOf(op), op: op,
+      level: q.lv || null, a: q.a, b: q.b, correct: !!ok, first_try: !!q.first, timed_out: !!timedOut,
+      answer: typeof val === 'number' && isFinite(val) ? val : null, elapsed_ms: Math.max(0, Math.round(performance.now() - S.qStart))
+    });
+    if (AQ.length > 500) AQ.splice(0, AQ.length - 500);
+    persistAttempts();
+    if (AQ.length >= 10) flushAttempts();
+  }
+  function flushAttempts() {
+    if (!sb || !profile || !AQ.length || AFLY) return Promise.resolve();
+    var batch = AQ.slice(), pid = profile.id;
+    AFLY = true;
+    return Promise.resolve(sb.from('attempts').insert(batch)).then(function (r) {
+      if (r && r.error) throw r.error;
+      if (profile && profile.id === pid) { AQ.splice(0, batch.length); persistAttempts(); } else lsDel(AKEY + pid);
+      AFLY = false;
+    }).catch(function () { AFLY = false; });
+  }
+  function flushAll() { return Promise.all([pushState(), flushAttempts()]).catch(function () {}); }
+  function withTimeout(pr, ms) { return Promise.race([pr, new Promise(function (res) { setTimeout(res, ms); })]); }
+
   function lvl(a, b) { return store.facts[a + 'x' + b] || 0; }
   function setLvl(a, b, v) { store.facts[a + 'x' + b] = Math.max(0, Math.min(3, v)); }
 
@@ -533,7 +663,7 @@ body { margin: 0; }
   }
 
   /* ---------- 화면 전환 ---------- */
-  var screens = ['home', 'learn', 'quiz', 'result'];
+  var screens = ['auth', 'profiles', 'home', 'learn', 'quiz', 'result'];
   function show(name) {
     screens.forEach(function (n) { $('#' + n).hidden = n !== name; });
     window.scrollTo(0, 0);
@@ -542,12 +672,23 @@ body { margin: 0; }
 
   /* ---------- 천만냥냥 (구구단 놀이터 캐릭터) ---------- */
   var NY = {
-    hi: ['윤지야! 어서 와냥! 나는 천만냥냥이냥.', '오늘도 구구단으로 놀아 보냥?', '같이 구구단을 익혀 보냥!', '천만냥을 들고 응원하러 왔냥!', '윤지! 구구단 자신있냥?', '구구단은 다외우고 노냥?!'],
+    hi: ['{call}! 어서 와냥! 나는 천만냥냥이냥.', '오늘도 구구단으로 놀아 보냥?', '같이 구구단을 익혀 보냥!', '천만냥을 들고 응원하러 왔냥!', '{name}! 구구단 자신있냥?', '구구단은 다외우고 노냥?!'],
     ok: ['잘했냥', '좋냥', '멋지냥', '훌륭하냥', '대단하냥', '맞냥'],
     bad: ['아쉽냥', '아니냥', '틀렸냥', '노력해냥', '분발해냥'],
     slow: ['시간이 없냥', '자냥', '졸고있냥', '모르냥', '느긋하냥', '뭐하냥']
   };
   var nyLast = '';
+  function nameCall(n) {   /* 받침이 있으면 '아', 없으면 '야' (한글 이름일 때) */
+    var c = n.charCodeAt(n.length - 1);
+    return c >= 0xAC00 && c <= 0xD7A3 ? n + ((c - 0xAC00) % 28 ? '아' : '야') : n;
+  }
+  function nyHi() {   /* 이름이 들어가는 인사는 고른 프로필의 이름으로 바꾼다 */
+    var nm = profile ? profile.name : '';
+    var list = NY.hi.filter(function (t) { return nm || t.indexOf('{') < 0; }).map(function (t) {
+      return t.replace('{call}', esc(nameCall(nm))).replace('{name}', esc(nm));
+    });
+    return nyPick(list);
+  }
   function nyPick(list) {
     var t, n = 0;
     do { t = list[Math.floor(Math.random() * list.length)]; n++; } while (t === nyLast && n < 8);
@@ -588,13 +729,18 @@ body { margin: 0; }
   function renderHome() {
     hush();
     if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
+    flushAttempts();
     setHue(store.sel);
     document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
+    document.querySelector('[data-slot="acct"]').innerHTML = profile
+      ? '<button class="btn small" data-act="profiles" aria-label="프로필 바꾸기">' + esc(profile.name) + ' ▾</button><span class="syncerr" id="syncErr" hidden>저장하지 못했어요. 다시 시도하고 있어요.</span>'
+      : '';
+    setSyncMsg(SYNC.bad);
     paintTabs();
     if (store.tab === 'as') { renderAS(); show('home'); return; }
     if (store.tab === 'ml') { renderML(); show('home'); return; }
 
-    $('#nyHome').innerHTML = nyRow('lg', nyPick(NY.hi), '', true);
+    $('#nyHome').innerHTML = nyRow('lg', nyHi(), '', true);
     var h = '<div class="corner"></div>';
     var a, b, l, done = 0, rowDone = 0;
     for (b = 1; b <= 9; b++) h += '<div class="colhead">' + b + '</div>';
@@ -1214,7 +1360,7 @@ body { margin: 0; }
 
   function renderQuiz() {
     var q = S.queue[S.idx];
-    S.locked = false; S.input = ''; S.slowSaid = false;
+    S.locked = false; S.input = ''; S.slowSaid = false; S.qStart = performance.now();
     setHue(hueOf(q));
     if (!q.opts && S.mode === 'practice') q.opts = makeChoicesQ(q);
     var pct = Math.round(S.idx / S.queue.length * 100);
@@ -1251,6 +1397,7 @@ body { margin: 0; }
     var q = S.queue[S.idx], p = calc(q), ok = !timedOut && val === p;
     S.locked = true;
     S.lockedAt = Date.now();
+    logAttempt(q, ok, timedOut, val);
     stopTimer();
     if (timedOut) S.late++;
     if (q.first) {
@@ -1395,7 +1542,12 @@ body { margin: 0; }
     var t = e.target.closest('button');
     if (!t || t.disabled) return;
     var act = t.dataset.act;
-    if (act === 'home') renderHome();
+    if (act === 'login') login();
+    else if (act === 'logout') logout();
+    else if (act === 'retry') { if (user) afterLogin(); else if (sb) { showGate('loading'); Promise.resolve(sb.auth.getSession()).then(function (r) { var ss = r && r.data && r.data.session; if (ss) { user = ss.user; afterLogin(); } else showGate('login'); }).catch(function () { showGate('error'); }); } else location.reload(); }
+    else if (act === 'profiles') { withTimeout(flushAll(), 3000).then(function () { return fetchProfiles(); }).then(function (l) { profiles = l; showProfiles(); }).catch(function () { showProfiles(); }); }
+    else if (act === 'prof-add') addProfile();
+    else if (act === 'home') renderHome();
     else if (act === 'snd') { store.sound = !store.sound; save(); if (!store.sound) hush(); paintSnd(); }
     else if (act === 'learn') startLearn(store.sel);
     else if (act === 'practice') startSession({ mode: 'practice', dan: store.sel });
@@ -1459,6 +1611,17 @@ body { margin: 0; }
       var mlBtn = document.querySelector('.lvl[data-mlv="' + mlSel + '"]');
       if (mlBtn) mlBtn.focus({ preventScroll: true });
     }
+    else if (t.dataset.prof) {
+      var pr = profiles.filter(function (p) { return p.id === t.dataset.prof; })[0];
+      if (pr) { if (profile && profile.id === pr.id) renderHome(); else selectProfile(pr).catch(function () { showProfiles('프로필을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.'); }); }
+    }
+    else if (t.dataset.profdel) {
+      if (t.dataset.arm === '1') deleteProfile(t.dataset.profdel);
+      else {
+        t.dataset.arm = '1'; t.textContent = '정말 삭제';
+        setTimeout(function () { if (t.isConnected && t.dataset.arm === '1') { t.dataset.arm = ''; t.textContent = '삭제'; } }, 4000);
+      }
+    }
     else if (t.dataset.tab) { store.tab = t.dataset.tab; save(); renderHome(); }
     else if (t.dataset.op) {
       var opSel = t.dataset.op;
@@ -1479,6 +1642,7 @@ body { margin: 0; }
   });
 
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target && e.target.id === 'profName') { e.preventDefault(); addProfile(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (!$('#quiz').hidden && S) {
       if (S.locked) {
@@ -1497,7 +1661,164 @@ body { margin: 0; }
     }
   });
 
-  renderHome();
+  /* ---------- 로그인 · 프로필 ---------- */
+  var GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+
+  function showGate(kind, detail) {
+    var body;
+    if (kind === 'loading') body = '<p class="msg">불러오는 중이에요…</p>';
+    else if (kind === 'config') body = '<p class="msg">서비스 연결 설정이 아직 없어요.</p><p class="msg">관리하는 분은 <code>index.html</code>의 <code>GUGUDAN_CONFIG</code>에 Supabase 주소와 공개 키를 넣어 주세요. 자세한 방법은 README의 "로그인과 데이터 저장"에 있어요.</p>';
+    else if (kind === 'lib') body = '<p class="msg">로그인 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p><button class="btn primary wide" data-act="retry">다시 시도</button>';
+    else if (kind === 'pending') body = '<p class="msg"><b>가입 신청이 접수됐어요.</b></p><p class="msg">관리자가 승인하면 쓸 수 있어요. 승인되면 아래 버튼으로 다시 확인해 주세요.</p>' + (detail ? '<p class="msg">계정: ' + esc(detail) + '</p>' : '') + '<button class="btn primary wide" data-act="retry">승인 확인</button><button class="btn wide" data-act="logout">로그아웃</button>';
+    else if (kind === 'blocked') body = '<p class="msg">이 계정은 지금 쓸 수 없어요.</p><p class="msg">관리자에게 문의해 주세요.</p>' + (detail ? '<p class="msg">계정: ' + esc(detail) + '</p>' : '') + '<button class="btn wide" data-act="logout">로그아웃</button>';
+    else if (kind === 'error') body = '<p class="msg">정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p><button class="btn primary wide" data-act="retry">다시 시도</button><button class="btn wide" data-act="logout">로그아웃</button>';
+    else body = '<p class="msg">부모님 계정으로 로그인하면 아이별로 진행 상황이 저장돼요.</p><button class="gbtn" data-act="login">' + GOOGLE_G + 'Google 계정으로 로그인</button>' + (detail ? '<p class="err" role="alert">' + esc(detail) + '</p>' : '');
+    $('#auth').innerHTML = '<div class="gate"><h1>구구단 놀이터</h1><div class="card">' + body + '</div></div>';
+    show('auth');
+  }
+
+  function lastProfileId() { return user ? lsGet(LKEY + user.id) : null; }
+
+  function showProfiles(msg) {
+    var h = '', i, cur = profile ? profile.id : '';
+    for (i = 0; i < profiles.length; i++) {
+      h += '<div class="prow"><button class="btn prof" data-prof="' + esc(profiles[i].id) + '" aria-pressed="' + (profiles[i].id === cur) + '">' + esc(profiles[i].name) + '</button>' +
+        '<button class="btn small danger" data-profdel="' + esc(profiles[i].id) + '" aria-label="' + esc(profiles[i].name) + ' 프로필 삭제">삭제</button></div>';
+    }
+    var canImport = hasProgress(readLegacy()) && !lsGet(IKEY);
+    var add = profiles.length >= 6
+      ? '<p class="msg">프로필은 최대 6개까지 만들 수 있어요.</p>'
+      : '<h3>프로필 추가</h3><input class="field" id="profName" maxlength="12" autocomplete="off" placeholder="이름이나 별명" aria-label="프로필 이름">' +
+        '<p class="msg" style="margin:0;font-size:.9rem">실명 대신 별명을 써도 돼요.</p>' +
+        (canImport ? '<label class="check"><input type="checkbox" id="profImport" checked><span>이 기기에 저장돼 있던 진행 상황(별 ' + (+readLegacy().stars || 0) + '개)을 이 프로필로 가져오기</span></label>' : '') +
+        '<button class="btn primary wide" data-act="prof-add">추가하기</button>';
+    $('#profiles').innerHTML =
+      '<header class="top"><div><h1>누가 놀까요?</h1><p class="sub">놀이할 프로필을 골라 주세요.</p></div></header>' +
+      (profiles.length ? '<div class="plist">' + h + '</div>' : '<p class="msg" style="margin:.5rem 0">아직 프로필이 없어요. 아래에서 첫 프로필을 만들어 주세요.</p>') +
+      '<div class="card box" style="margin-top:1rem">' + add + (msg ? '<p class="err" role="alert">' + esc(msg) + '</p>' : '') + '</div>' +
+      '<div class="acct-foot" style="margin-top:1rem"><span>' + esc(user && user.email ? user.email : '') + '</span><button class="btn small" data-act="logout">로그아웃</button></div>';
+    show('profiles');
+  }
+
+  function fetchProfiles() {
+    return Promise.resolve(sb.from('profiles').select('id,name').order('created_at', { ascending: true })).then(function (r) {
+      if (r.error) throw r.error;
+      return r.data || [];
+    });
+  }
+
+  function selectProfile(p) {
+    return withTimeout(flushAll(), 3000).then(function () {
+      return Promise.resolve(sb.from('profile_state').select('progress,settings,updated_at').eq('profile_id', p.id).maybeSingle());
+    }).then(function (r) {
+      if (r.error) throw r.error;
+      var row = r.data, pend = pendingOf(p.id);
+      var useServer = !!row && (!pend || new Date(row.updated_at).getTime() >= pend.at);
+      var src = useServer ? row : pend;
+      var next = Object.assign({}, src && src.progress);
+      next.sound = !(src && src.settings && src.settings.sound === false);
+      profile = p; SYNC.bad = false;
+      store = normalize(next);
+      AQ = lsJson(AKEY + p.id) || [];
+      if (!Array.isArray(AQ)) AQ = [];
+      if (user) lsSet(LKEY + user.id, p.id);
+      if (pend && !useServer) pushState();
+      renderHome();
+      flushAttempts();
+    });
+  }
+
+  function afterLogin() {
+    showGate('loading');
+    return Promise.resolve(sb.from('members').select('status').eq('user_id', user.id).maybeSingle()).then(function (r) {
+      if (r.error) throw r.error;
+      var st = r.data && r.data.status, who = user && user.email ? user.email : '';
+      if (st === 'blocked') { showGate('blocked', who); return null; }
+      if (st !== 'approved') { showGate('pending', who); return null; }
+      return fetchProfiles();
+    }).then(function (list) {
+      if (!list) return;
+      profiles = list;
+      var last = lastProfileId(), pick = list.filter(function (p) { return p.id === last; })[0];
+      if (pick) return selectProfile(pick);
+      showProfiles();
+    }).catch(function () { showGate('error'); });
+  }
+
+  function addProfile() {
+    var input = $('#profName'), name = input ? input.value.replace(/\s+/g, ' ').trim() : '';
+    if (!name) return showProfiles('이름을 입력해 주세요.');
+    if (name.length > 12) return showProfiles('이름은 12자까지 쓸 수 있어요.');
+    if (profiles.some(function (p) { return p.name === name; })) return showProfiles('같은 이름의 프로필이 이미 있어요.');
+    var imp = $('#profImport'), doImport = !!(imp && imp.checked);
+    return Promise.resolve(sb.from('profiles').insert({ name: name }).select('id,name').single()).then(function (r) {
+      if (r.error) throw r.error;
+      profiles.push(r.data);
+      if (doImport) {
+        var old = readLegacy();
+        profile = r.data;
+        store = normalize(JSON.parse(JSON.stringify(old)));
+        lsSet(IKEY, '1');
+        save();
+        return pushState().then(function () { return selectProfile(r.data); });
+      }
+      return selectProfile(r.data);
+    }).catch(function () { showProfiles('프로필을 만들지 못했어요. 잠시 뒤에 다시 해 주세요.'); });
+  }
+
+  function deleteProfile(id) {
+    return Promise.resolve(sb.from('profiles').delete().eq('id', id)).then(function (r) {
+      if (r.error) throw r.error;
+      profiles = profiles.filter(function (p) { return p.id !== id; });
+      lsDel(PKEY + id); lsDel(AKEY + id);
+      if (profile && profile.id === id) { profile = null; AQ = []; store = normalize(freshStore()); if (user) lsDel(LKEY + user.id); }
+      showProfiles();
+    }).catch(function () { showProfiles('삭제하지 못했어요. 잠시 뒤에 다시 해 주세요.'); });
+  }
+
+  function resetLocal() {
+    clearTimeout(SYNC.timer); SYNC.bad = false;
+    user = null; profile = null; profiles = []; AQ = [];
+    store = normalize(freshStore());
+    if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
+    hush();
+  }
+  function logout() {
+    return withTimeout(flushAll(), 3000).then(function () {
+      return Promise.resolve(sb ? sb.auth.signOut() : null);
+    }).catch(function () {}).then(function () { resetLocal(); showGate('login'); });
+  }
+
+  function boot() {
+    show('auth');
+    if (!CFG.supabaseUrl || !CFG.supabasePublishableKey) return showGate('config');
+    if (!(window.supabase && window.supabase.createClient)) return showGate('lib');
+    showGate('loading');
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabasePublishableKey, {
+      auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    sb.auth.onAuthStateChange(function (ev, session) {
+      if (ev === 'SIGNED_OUT') { if (user) { resetLocal(); showGate('login'); } return; }
+      if (session && session.user && (!user || user.id !== session.user.id)) { user = session.user; afterLogin(); }
+    });
+    Promise.resolve(sb.auth.getSession()).then(function (r) {
+      var session = r && r.data && r.data.session;
+      if (!session) { if (!user) showGate('login'); return; }
+      if (!user) { user = session.user; afterLogin(); }
+    }).catch(function () { showGate('error'); });
+  }
+
+  function login() {
+    return Promise.resolve(sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } })).then(function (r) {
+      if (r && r.error) throw r.error;
+    }).catch(function () { showGate('login', '로그인을 시작하지 못했어요. 잠시 뒤에 다시 해 주세요.'); });
+  }
+
+  /* 화면을 떠나거나 숨길 때 아직 못 올린 것을 올려 본다 */
+  document.addEventListener('visibilitychange', function () { if (document.hidden) flushAll(); });
+  window.addEventListener('pagehide', function () { flushAll(); });
+
+  boot();
 })();
 </script>
 
