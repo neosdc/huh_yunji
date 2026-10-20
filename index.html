@@ -446,7 +446,7 @@ body { margin: 0; }
 <script>
 /* 서비스 연결 설정 (Supabase). 프로젝트 URL과 anon(공개) 키를 넣어 주세요. README의 "로그인과 데이터 저장"을 참고하세요.
    anon 키는 공개되는 값이라 코드에 들어가도 괜찮습니다. 데이터는 DB의 접근 제어(RLS)가 지킵니다. */
-window.GUGUDAN_CONFIG = { supabaseUrl: '', supabaseAnonKey: '' };
+window.GUGUDAN_CONFIG = { supabaseUrl: '', supabasePublishableKey: '' };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script>
@@ -1791,10 +1791,10 @@ window.GUGUDAN_CONFIG = { supabaseUrl: '', supabaseAnonKey: '' };
 
   function boot() {
     show('auth');
-    if (!CFG.supabaseUrl || !CFG.supabaseAnonKey) return showGate('config');
+    if (!CFG.supabaseUrl || !CFG.supabasePublishableKey) return showGate('config');
     if (!(window.supabase && window.supabase.createClient)) return showGate('lib');
     showGate('loading');
-    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabasePublishableKey, {
       auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
     sb.auth.onAuthStateChange(function (ev, session) {

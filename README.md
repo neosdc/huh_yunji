@@ -119,10 +119,10 @@
    - 승인된 리디렉션 URI에 `https://<프로젝트 ID>.supabase.co/auth/v1/callback`을 넣습니다.
    - Supabase 대시보드 **Authentication > Sign In / Providers > Google**에서 켜고 클라이언트 ID와 보안 비밀을 넣습니다.
 4. **Authentication > URL Configuration**에서 Site URL을 배포 주소(예: `https://<계정>.github.io/huh_yunji/`)로 하고, Redirect URLs에 배포 주소와 로컬 개발 주소(예: `http://localhost:8000/`)를 추가합니다. 여기 없는 주소에서는 로그인이 거부됩니다.
-5. 프로젝트 화면의 **Connect** 버튼에서 Project URL과 **publishable 키**(`sb_publishable_...`)를 확인해 `index.html` 위쪽의 설정에 넣습니다. 예전 방식의 `anon` 키(Settings > API Keys의 Legacy 탭)도 같은 칸에 넣으면 동작합니다. 변수 이름이 `supabaseAnonKey`인 것은 그 때문입니다.
+5. 프로젝트 화면의 **Connect** 버튼에서 Project URL과 **publishable 키**(`sb_publishable_...`)를 확인해 `index.html` 위쪽의 설정에 넣습니다. 예전 방식의 `anon` 키(Settings > API Keys의 Legacy 탭)도 같은 칸(`supabasePublishableKey`)에 넣으면 동작합니다.
 
 ```html
-<script>window.GUGUDAN_CONFIG = { supabaseUrl: 'https://xxxx.supabase.co', supabaseAnonKey: '...' };</script>
+<script>window.GUGUDAN_CONFIG = { supabaseUrl: 'https://xxxx.supabase.co', supabasePublishableKey: '...' };</script>
 ```
 
 ### 가입 승인
