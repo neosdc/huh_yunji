@@ -243,7 +243,8 @@ button:disabled { opacity: .4; cursor: default; }
   width: 100%; min-height: 3rem; padding: 0; font-family: var(--font-d); font-size: 1.9rem; color: var(--ink);
   background: var(--card); border: 2.5px dashed var(--edge); border-radius: 12px;
 }
-.vcell.memo { min-height: 2rem; font-size: 1.05rem; color: var(--bad); border-width: 2px; border-style: dotted; border-radius: 8px; }
+.vcell.memo { min-height: 2rem; font-size: 1.05rem; color: var(--ink-2); opacity: .5; border-width: 2px; border-style: dotted; border-radius: 8px; }
+.vcell.memo.on { color: var(--bad); opacity: 1; border-style: solid; border-color: var(--bad); }
 .vcell.sel { border-style: solid; border-color: var(--h); box-shadow: 0 0 0 3px color-mix(in srgb, var(--h) 35%, transparent); }
 .vcell.good { color: var(--good); border-color: var(--good); border-style: solid; }
 .vcell.bad { color: var(--bad); border-color: var(--bad); border-style: solid; }
@@ -1001,7 +1002,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   function isVQ(q) { return q.op === '+' || q.op === '-'; }
   function vqOf(q) {
     var n = Math.max(String(q.a).length, String(q.b).length) + (q.op === '+' ? 1 : 0), memo = [], ans = [], k;
-    for (k = 0; k < n; k++) { memo.push(''); ans.push(''); }
+    for (k = 0; k < n; k++) { memo.push(false); ans.push(''); }
     return { n: n, memo: memo, ans: ans, sel: { t: 'a', k: 0 } };
   }
   function vqHtml(q) {
@@ -1010,7 +1011,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     function dgt(str, k) { return k < str.length ? str.charAt(str.length - 1 - k) : ''; }
     for (k = n - 1; k >= 0; k--) {
       head += '<span class="ch">' + LAB[k] + '</span>';
-      memo += '<button class="vcell memo" data-vc="m' + k + '" aria-label="' + LAB[k] + '의 자리 받아올림·받아내림 메모"></button>';
+      memo += k === 0 ? '<span></span>' : '<button class="vcell memo" data-vc="m' + k + '" aria-pressed="false" aria-label="' + LAB[k] + '의 자리 ' + (q.op === '+' ? '받아올림 +1' : '받아내림 −1') + ' 표시"></button>';
       top += '<span class="dg">' + dgt(A, k) + '</span>';
       bot += '<span class="dg">' + dgt(B, k) + '</span>';
       ans += '<button class="vcell ans" data-vc="a' + k + '" aria-label="답의 ' + LAB[k] + '의 자리"></button>';
@@ -1018,41 +1019,46 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     return '<div class="vq" style="grid-template-columns:2rem repeat(' + n + ',minmax(0,3.1rem))" role="group" aria-label="' + q.a + ' ' + sym(q) + ' ' + q.b + ' 세로셈">' +
       '<span></span>' + head + '<span></span>' + memo + '<span></span>' + top +
       '<span class="op">' + sym(q) + '</span>' + bot + '<i class="rule"></i><span></span>' + ans + '</div>' +
-      '<p class="vqcap">칸을 눌러 고른 뒤 숫자를 눌러요. 위의 작은 칸은 받아올림·받아내림을 적는 메모예요.</p>';
+      '<p class="vqcap">아래 큰 칸을 눌러 고른 뒤 숫자를 눌러요. 위의 작은 버튼은 ' + (q.op === '+' ? '받아올림(+1)' : '받아내림(−1)') + '을 표시해요.</p>';
   }
   function vqPaint() {
-    var v = S.vq, cells = document.querySelectorAll('#quiz [data-vc]'), i, c, t, k, arr;
+    var v = S.vq, cells = document.querySelectorAll('#quiz [data-vc]'), i, c, t, k, mark = S.queue[S.idx].op === '+' ? '+1' : '−1';
     if (!v) return;
     for (i = 0; i < cells.length; i++) {
       c = cells[i]; t = c.dataset.vc.charAt(0); k = +c.dataset.vc.slice(1);
-      arr = t === 'a' ? v.ans : v.memo;
-      c.textContent = arr[k];
-      c.classList.toggle('sel', !S.locked && v.sel.t === t && v.sel.k === k);
+      if (t === 'a') {
+        c.textContent = v.ans[k];
+        c.classList.toggle('sel', !S.locked && v.sel.k === k);
+      } else {
+        c.textContent = mark;
+        c.classList.toggle('on', !!v.memo[k]);
+        c.setAttribute('aria-pressed', String(!!v.memo[k]));
+      }
     }
   }
   function vqSelect(code) {
     if (!S || !S.vq || S.locked) return;
-    S.vq.sel = { t: code.charAt(0), k: +code.slice(1) };
+    var k = +code.slice(1);
+    if (code.charAt(0) === 'm') S.vq.memo[k] = !S.vq.memo[k];   /* 받아올림(+1)·받아내림(−1) 표시를 켜고 끈다 */
+    else S.vq.sel = { t: 'a', k: k };
     vqPaint();
   }
   function vqKey(key) {
-    var v = S.vq, t = v.sel.t, k = v.sel.k, arr = t === 'a' ? v.ans : v.memo;
+    var v = S.vq, k = v.sel.k, arr = v.ans;
     if (key === 'ok') return vqSubmit();
     if (key === 'bk') {
-      if (arr[k]) arr[k] = arr[k].slice(0, -1);
-      else if (t === 'a' && k > 0) { v.sel.k = k - 1; v.ans[k - 1] = ''; }
+      if (arr[k]) arr[k] = '';
+      else if (k > 0) { v.sel.k = k - 1; arr[k - 1] = ''; }
     } else {
-      if (t === 'a') {
-        arr[k] = key;
-        if (k + 1 < v.n) v.sel.k = k + 1;
-      } else arr[k] = arr[k].length >= 2 ? key : arr[k] + key;
+      arr[k] = key;
+      if (k + 1 < v.n) v.sel.k = k + 1;
     }
     var fb = $('#fb'); if (fb && !fb.querySelector('.fb')) fb.innerHTML = '';
     vqPaint();
   }
-  function vqMove(dk, dt) {
+  function vqMove(dk, toggle) {
     var v = S.vq;
-    if (dt) v.sel.t = v.sel.t === 'a' ? 'm' : 'a';
+    if (toggle) { if (v.sel.k > 0) v.memo[v.sel.k] = !v.memo[v.sel.k]; }   /* 위/아래 방향키: 선택한 자리의 올림·내림 표시 */
     else v.sel.k = Math.min(v.n - 1, Math.max(0, v.sel.k + dk));
     vqPaint();
   }
@@ -1075,8 +1081,6 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   function vqEnd(ok) {
     var cells = document.querySelectorAll('#quiz .vcell.ans'), i;
     for (i = 0; i < cells.length; i++) { cells[i].classList.remove('sel'); cells[i].classList.add(ok ? 'good' : 'bad'); }
-    var m = document.querySelectorAll('#quiz .vcell.memo');
-    for (i = 0; i < m.length; i++) m[i].classList.remove('sel');
   }
 
   function hintHtml(q) {
