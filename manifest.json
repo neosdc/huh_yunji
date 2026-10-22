@@ -1,0 +1,102 @@
+{
+  "nyang/hi_02": {
+    "path": "voice/v1/nyang/hi_02.mp3",
+    "text": "오늘도 구구단으로 놀아 보냥?"
+  },
+  "nyang/hi_03": {
+    "path": "voice/v1/nyang/hi_03.mp3",
+    "text": "같이 구구단을 익혀 보냥!"
+  },
+  "nyang/hi_04": {
+    "path": "voice/v1/nyang/hi_04.mp3",
+    "text": "천만냥을 들고 응원하러 왔냥!"
+  },
+  "nyang/hi_06": {
+    "path": "voice/v1/nyang/hi_06.mp3",
+    "text": "구구단은 다외우고 노냥?!"
+  },
+  "nyang/ok_01": {
+    "path": "voice/v1/nyang/ok_01.mp3",
+    "text": "잘했냥"
+  },
+  "nyang/ok_02": {
+    "path": "voice/v1/nyang/ok_02.mp3",
+    "text": "좋냥"
+  },
+  "nyang/ok_03": {
+    "path": "voice/v1/nyang/ok_03.mp3",
+    "text": "멋지냥"
+  },
+  "nyang/ok_04": {
+    "path": "voice/v1/nyang/ok_04.mp3",
+    "text": "훌륭하냥"
+  },
+  "nyang/ok_05": {
+    "path": "voice/v1/nyang/ok_05.mp3",
+    "text": "대단하냥"
+  },
+  "nyang/ok_06": {
+    "path": "voice/v1/nyang/ok_06.mp3",
+    "text": "맞냥"
+  },
+  "nyang/bad_01": {
+    "path": "voice/v1/nyang/bad_01.mp3",
+    "text": "아쉽냥"
+  },
+  "nyang/bad_02": {
+    "path": "voice/v1/nyang/bad_02.mp3",
+    "text": "아니냥"
+  },
+  "nyang/bad_03": {
+    "path": "voice/v1/nyang/bad_03.mp3",
+    "text": "틀렸냥"
+  },
+  "nyang/bad_04": {
+    "path": "voice/v1/nyang/bad_04.mp3",
+    "text": "노력해냥"
+  },
+  "nyang/bad_05": {
+    "path": "voice/v1/nyang/bad_05.mp3",
+    "text": "분발해냥"
+  },
+  "nyang/slow_01": {
+    "path": "voice/v1/nyang/slow_01.mp3",
+    "text": "시간이 없냥"
+  },
+  "nyang/slow_02": {
+    "path": "voice/v1/nyang/slow_02.mp3",
+    "text": "자냥"
+  },
+  "nyang/slow_03": {
+    "path": "voice/v1/nyang/slow_03.mp3",
+    "text": "졸고있냥"
+  },
+  "nyang/slow_04": {
+    "path": "voice/v1/nyang/slow_04.mp3",
+    "text": "모르냥"
+  },
+  "nyang/slow_05": {
+    "path": "voice/v1/nyang/slow_05.mp3",
+    "text": "느긋하냥"
+  },
+  "nyang/slow_06": {
+    "path": "voice/v1/nyang/slow_06.mp3",
+    "text": "뭐하냥"
+  },
+  "nyang/result_01": {
+    "path": "voice/v1/nyang/result_01.mp3",
+    "text": "훌륭하냥!"
+  },
+  "nyang/result_02": {
+    "path": "voice/v1/nyang/result_02.mp3",
+    "text": "조금만 더 노력하냥"
+  },
+  "nyang/result_03": {
+    "path": "voice/v1/nyang/result_03.mp3",
+    "text": "노력하냥"
+  },
+  "nyang/result_04": {
+    "path": "voice/v1/nyang/result_04.mp3",
+    "text": "더 많은 노력이 필요하냥"
+  }
+}
