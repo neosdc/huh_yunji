@@ -163,3 +163,13 @@ create policy attempts_select on public.attempts for select to authenticated
   using (public.owns_profile(profile_id));
 create policy attempts_insert on public.attempts for insert to authenticated
   with check (public.owns_profile(profile_id));
+
+-- 5) 천만냥냥 음성 (비공개 버킷) ----------------------------------------------
+-- 저작권이 있는 음성 파일은 공개 저장소나 정적 호스팅에 두지 않고, 승인된 사용자만 읽을 수 있는 비공개 버킷에 둡니다.
+-- mp3는 대시보드 Storage > protected-assets 의 voice/v1/nyang/ 아래에 올립니다. 쓰기 정책은 만들지 않아서 업로드는 관리자만 할 수 있습니다.
+insert into storage.buckets (id, name, public) values ('protected-assets', 'protected-assets', false)
+  on conflict (id) do nothing;
+
+drop policy if exists protected_assets_select on storage.objects;
+create policy protected_assets_select on storage.objects for select to authenticated
+  using (bucket_id = 'protected-assets' and public.is_approved());
