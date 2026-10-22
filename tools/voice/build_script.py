@@ -2,7 +2,9 @@
 
 - 천만냥냥 대사: 게임(index.html)의 `var NY = {...}` 대사 표와 결과 메시지(nyResult)를 직접 읽는다.
   게임의 대사를 고치면 이 스크립트를 다시 실행해 대본을 맞춘다. (대사의 단일 출처는 index.html)
-  이름이 들어가는 대사({call}, {name})는 미리 합성할 수 없어 제외한다. (브라우저 TTS 등으로 처리)
+  이름이 들어가는 대사({call}, {name})는 이름을 미리 합성할 수 없으므로 이름 부분을 뺀 문장만 합성한다.
+  (예: "{call}! 어서 와냥!" -> 음성은 "어서 와냥!", 말풍선에는 "영희야! 어서 와냥!")
+  이름 자리가 문장 맨 앞이 아니면 이름만 빼면 문장이 어색해지므로 합성 대상에서 제외한다.
 - 구구단 정답 읽기: INCLUDE_GUGUDAN_ANSWER = True 일 때만 포함한다. 기본값은 False.
 
 사용 (저장소의 tools/voice 폴더에서):
@@ -57,6 +59,16 @@ def read_game_lines(html_path: Path) -> dict[str, list[str]]:
     return lines
 
 
+def strip_name(text: str) -> str | None:
+    """'{call}! 어서 와냥!' -> '어서 와냥!' 처럼 문장 맨 앞의 이름 자리와 그 뒤 문장부호를 뺀다.
+    이름 자리가 문장 맨 앞이 아니거나(예: '오늘은 {name} 차례'), 뺀 뒤 남는 문장이 없으면 None."""
+    m = re.match(r"^\{\w+\}[\s!?.,~]*", text)
+    if not m:
+        return None
+    rest = text[m.end():].strip()
+    return rest if rest and "{" not in rest else None
+
+
 def build(html_path: Path) -> list[dict]:
     items = []
     if INCLUDE_GUGUDAN_ANSWER:
@@ -70,16 +82,23 @@ def build(html_path: Path) -> list[dict]:
     skipped = []
     for kind, lines in read_game_lines(html_path).items():
         for i, text in enumerate(lines, 1):   # 번호는 원래 순서 기준이라 대사를 뒤에 추가해도 키가 안 바뀐다
-            if "{" in text:
-                skipped.append(text)
-                continue
-            items.append({
+            item = {
                 "key": f"nyang/{kind}_{i:02d}",
                 "group": f"nyang_{kind}",
                 "text": text,
-            })
+            }
+            if "{" in text:
+                spoken = strip_name(text)
+                if spoken is None:
+                    skipped.append(text)
+                    continue
+                # 합성하는 것은 이름을 뺀 문장. 게임이 클립을 찾는 열쇠는 원래 대사(source)다.
+                item["text"] = spoken
+                item["source"] = text
+                print(f"[이름 제외] {text}  ->  {spoken}")
+            items.append(item)
     for text in skipped:
-        print(f"[제외] 이름이 들어가는 대사: {text}")
+        print(f"[제외] 이름 자리가 문장 맨 앞이 아니라 이름만 빼면 문장이 어색해진다: {text}")
     return items
 
 
@@ -88,9 +107,10 @@ VOICE_PREFIX = "voice/v1"
 
 
 def build_manifest(items: list[dict]) -> dict:
-    """게임이 읽는 매니페스트. key -> {버킷 경로, 대사 텍스트(대사로 클립을 찾고, 실패 시 TTS로 읽을 때 사용)}"""
+    """게임이 읽는 매니페스트. key -> {버킷 경로, 클립을 찾는 대사}.
+    이름이 들어가는 대사는 합성한 문장(이름을 뺀 것)이 아니라 index.html의 원래 대사(source)를 열쇠로 쓴다."""
     return {
-        x["key"]: {"path": f"{VOICE_PREFIX}/{x['key']}.mp3", "text": x["text"]}
+        x["key"]: {"path": f"{VOICE_PREFIX}/{x['key']}.mp3", "text": x.get("source", x["text"])}
         for x in items
     }
 
