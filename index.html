@@ -745,12 +745,17 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     var c = n.charCodeAt(n.length - 1);
     return c >= 0xAC00 && c <= 0xD7A3 ? n + ((c - 0xAC00) % 28 ? '아' : '야') : n;
   }
+  var nyHiTpl = '';   /* 방금 고른 인사의 원래 대사(이름 자리가 {call}, {name} 그대로인 것) */
   function nyHi() {   /* 이름이 들어가는 인사는 고른 프로필의 이름으로 바꾼다 */
     var nm = profile ? profile.name : '';
-    var list = NY.hi.filter(function (t) { return nm || t.indexOf('{') < 0; }).map(function (t) {
+    var tpls = NY.hi.filter(function (t) { return nm || t.indexOf('{') < 0; });
+    var list = tpls.map(function (t) {
       return t.replace('{call}', esc(nameCall(nm))).replace('{name}', esc(nm));
     });
-    return nyPick(list);
+    var text = nyPick(list);
+    /* 음성은 이름 부분을 뺀 문장이라, 이름이 채워진 문장이 아니라 원래 대사로 찾는다 */
+    nyHiTpl = tpls[list.indexOf(text)] || text;
+    return text;
   }
   function nyPick(list) {
     var t, n = 0;
@@ -809,7 +814,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     var hiText = nyHi();
     $('#nyHome').innerHTML = nyRow('lg', hiText, '', true);
     /* 인사는 홈에 올 때마다 말하면 시끄러우니 한 번만 소리로 들려준다 (자동재생이 막혀 못 냈으면 다음에 다시 시도) */
-    if (!nyGreeted) nyVoice(hiText).then(function (ok) { if (ok) nyGreeted = true; });
+    if (!nyGreeted) nyVoice(nyHiTpl).then(function (ok) { if (ok) nyGreeted = true; });
     var h = '<div class="corner"></div>';
     var a, b, l, done = 0, rowDone = 0;
     for (b = 1; b <= 9; b++) h += '<div class="colhead">' + b + '</div>';

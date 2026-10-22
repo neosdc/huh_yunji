@@ -1,4 +1,8 @@
 {
+  "nyang/hi_01": {
+    "path": "voice/v1/nyang/hi_01.mp3",
+    "text": "{call}! 어서 와냥! 나는 천만냥냥이냥."
+  },
   "nyang/hi_02": {
     "path": "voice/v1/nyang/hi_02.mp3",
     "text": "오늘도 구구단으로 놀아 보냥?"
@@ -10,6 +14,10 @@
   "nyang/hi_04": {
     "path": "voice/v1/nyang/hi_04.mp3",
     "text": "천만냥을 들고 응원하러 왔냥!"
+  },
+  "nyang/hi_05": {
+    "path": "voice/v1/nyang/hi_05.mp3",
+    "text": "{name}! 구구단 자신있냥?"
   },
   "nyang/hi_06": {
     "path": "voice/v1/nyang/hi_06.mp3",
