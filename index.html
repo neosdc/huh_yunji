@@ -394,6 +394,12 @@ body { margin: 0; }
 .gate { display: flex; flex-direction: column; gap: 1rem; align-items: stretch; margin-top: 12vh; text-align: center; }
 .gate h1 { margin: 0; }
 .gate .card { display: flex; flex-direction: column; gap: .9rem; }
+/* 시작 화면: 화면 어디를 눌러도 시작한다 (브라우저가 소리를 허용하려면 사용자가 한 번 눌러야 한다) */
+#start { cursor: pointer; }
+.gate.start { margin-top: 8vh; gap: .7rem; align-items: center; }
+.gate.start .nyang-row { --ny: 150px; }
+.gate.start .btn { min-width: 12rem; }
+.gate.start .hint { margin: 0; font-size: .9rem; }
 .msg { color: var(--ink-2); font-size: 1rem; line-height: 1.5; }
 .err { color: var(--bad); font-size: .95rem; }
 .gbtn {
@@ -423,6 +429,7 @@ body { margin: 0; }
 
   <section id="auth" hidden></section>
   <section id="profiles" hidden></section>
+  <section id="start" hidden></section>
 
   <section id="home" hidden>
     <header class="top">
@@ -550,6 +557,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   var sb = null, user = null, profile = null, profiles = [];
   /* 천만냥냥 음성 (비공개 버킷의 mp3). 로그인·승인된 사용자만 받을 수 있고, 못 받으면 소리 없이 넘어간다 */
   var voice = null, voiceWantPreload = false, voiceSeq = 0, nyBusy = null, nyGreeted = false;
+  var touched = false;   /* 이 페이지를 연 뒤 한 번이라도 눌렀는가. 누르기 전에는 브라우저가 소리를 막는다 */
   var SYNC = { timer: 0, inflight: false, again: false, p: null, bad: false };
   var AQ = [];            /* 아직 서버로 보내지 않은 풀이 기록 */
   var AFLY = false;
@@ -718,7 +726,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   }
 
   /* ---------- 화면 전환 ---------- */
-  var screens = ['auth', 'profiles', 'home', 'learn', 'quiz', 'result'];
+  var screens = ['auth', 'profiles', 'start', 'home', 'learn', 'quiz', 'result'];
   function show(name) {
     screens.forEach(function (n) { $('#' + n).hidden = n !== name; });
     window.scrollTo(0, 0);
@@ -1729,7 +1737,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 
   /* ---------- 이벤트 ---------- */
   /* 브라우저는 사용자가 누른 뒤에야 소리를 허용한다. 화면 어디를 눌러도 음성 재생을 풀어 둔다 */
-  document.addEventListener('click', function () { if (voice) voice.unlock(); }, true);
+  document.addEventListener('click', function () { touched = true; if (voice) voice.unlock(); }, true);
+  $('#start').addEventListener('click', startApp);
   $('#app').addEventListener('click', function (e) {
     var t = e.target.closest('button');
     if (!t || t.disabled) return;
@@ -1896,6 +1905,35 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     show('profiles');
   }
 
+  /* 프로필을 고른 직후 홈으로 가는 길.
+     새로고침이나 로그인 직후처럼 이 페이지를 아직 한 번도 누르지 않았다면 브라우저가 소리를 막으므로,
+     시작 화면을 먼저 보여 주고 눌렀을 때 홈으로 간다. (프로필을 직접 눌러 들어온 경우는 그 클릭이 소리를 풀어 주니 바로 홈) */
+  function needTap() {
+    if (!store.sound || !window.createVoice || touched) return false;
+    var ua = navigator.userActivation;
+    return !(ua && ua.hasBeenActive);
+  }
+  function enterHome() {
+    if (needTap()) showStart(); else renderHome();
+  }
+  function showStart() {
+    var name = profile ? profile.name : '';
+    $('#start').innerHTML =
+      '<div class="gate start">' +
+        '<h1>구구단 놀이터</h1>' +
+        nyRow('res float', '', '', false) +
+        '<p class="msg">' + (name ? esc(nameCall(name)) + ', 같이 놀아요!' : '같이 놀아요!') + '</p>' +
+        '<button class="btn primary" type="button" id="startBtn">시작하기</button>' +
+        '<p class="msg hint">화면 아무 곳이나 눌러도 돼요</p>' +
+      '</div>';
+    show('start');
+    var b = $('#startBtn'); if (b) b.focus({ preventScroll: true });
+  }
+  function startApp() {
+    if ($('#start').hidden) return;   /* 버튼과 화면 클릭이 겹쳐도 한 번만 */
+    renderHome();
+  }
+
   function fetchProfiles() {
     return Promise.resolve(sb.from('profiles').select('id,name').order('created_at', { ascending: true })).then(function (r) {
       if (r.error) throw r.error;
@@ -1919,7 +1957,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       if (!Array.isArray(AQ)) AQ = [];
       if (user) lsSet(LKEY + user.id, p.id);
       if (pend && !useServer) pushState();
-      renderHome();
+      enterHome();
       flushAttempts();
     });
   }
