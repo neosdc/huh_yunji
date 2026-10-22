@@ -171,7 +171,7 @@ update public.members set status = 'blocked', decided_at = now() where email = '
 - **파일 위치:** 대시보드 Storage의 `protected-assets` 버킷 `voice/v1/nyang/` 아래에 `ok_01.mp3`, `bad_01.mp3`, `slow_01.mp3`, `hi_02.mp3`, `result_01.mp3` 같은 이름으로 올립니다.
 - **시작 화면:** 브라우저는 사용자가 페이지를 한 번도 누르지 않은 상태에서는 소리를 막습니다. 새로고침하거나 로그인하고 돌아와 마지막에 쓴 프로필로 바로 들어가는 경우가 여기에 해당합니다. 이때는 홈 대신 "시작하기" 화면을 먼저 보여 주고, 화면을 누르면 홈으로 가면서 인사 음성이 나옵니다. 프로필을 직접 눌러 들어오거나, 소리를 꺼 둔 프로필, 이미 화면을 눌렀던 경우에는 시작 화면 없이 바로 홈으로 갑니다.
 - **구성:** `manifest.json`이 대사 문구와 파일 경로를 짝지은 목록이고, `voice.js`가 로그인한 사용자의 권한으로 mp3를 내려받아 재생합니다. 로그인 후 미리 받아 두고, 로그아웃하면 기기에 저장된 파일도 지웁니다.
-- **대사를 바꿀 때:** `index.html`의 `NY` 대사 표를 고친 뒤 음성을 다시 만들어 올리고 `manifest.json`을 갱신합니다. 같은 경로의 파일을 덮어쓰면 이미 받아 둔 기기가 옛 음성을 계속 쓰므로, 음성을 다시 만들 때는 `voice/v2/`처럼 경로 접두어를 바꿔 올리고 `manifest.json`의 경로도 바꿉니다.
+- **대사를 바꿀 때:** `index.html`의 `NY` 대사 표를 고친 뒤 음성을 다시 만들어 올리고 `manifest.json`을 갱신합니다. 만드는 방법은 `tools/voice/README.md`에 있습니다. 같은 경로의 파일을 덮어쓰면 이미 받아 둔 기기가 옛 음성을 계속 쓰므로, 음성을 다시 만들 때는 `voice/v2/`처럼 경로 접두어를 바꿔 올리고 `manifest.json`의 경로도 바꿉니다.
 - **배포 전 확인:** 로그아웃 상태와 승인되지 않은 계정에서 파일이 내려받아지지 않는지 확인합니다.
 
 ## 진행 데이터
@@ -184,7 +184,7 @@ update public.members set status = 'blocked', decided_at = now() where email = '
 
 ## 구조
 
-`index.html` 하나에 마크업, CSS, JavaScript와 캐릭터 이미지가 모두 들어 있습니다. 탭 아이콘은 `favicon.ico`, 천만냥냥 음성 재생은 `voice.js`와 `manifest.json`으로 따로 두고, 데이터베이스 스키마는 `supabase/schema.sql`에 있습니다. 게임 코드는 순수 JavaScript이고, 외부 라이브러리는 로그인과 저장을 위한 `@supabase/supabase-js` 하나만 CDN(jsDelivr, 버전 고정 + SRI 해시)에서 불러옵니다.
+`index.html` 하나에 마크업, CSS, JavaScript와 캐릭터 이미지가 모두 들어 있습니다. 탭 아이콘은 `favicon.ico`, 천만냥냥 음성 재생은 `voice.js`와 `manifest.json`으로 따로 두고, 데이터베이스 스키마는 `supabase/schema.sql`에 있습니다. 음성 파일을 만드는 도구(대본 생성, 합성, 후처리 스크립트)는 `tools/voice/`에 있고, 사용법은 그 폴더의 `README.md`를 보세요. 게임 코드는 순수 JavaScript이고, 외부 라이브러리는 로그인과 저장을 위한 `@supabase/supabase-js` 하나만 CDN(jsDelivr, 버전 고정 + SRI 해시)에서 불러옵니다.
 
 - **문제 표현:** 모든 문제를 `{a, b, op, lv}` 형태로 다룹니다. `op`는 구구단 `*`, 덧셈 `+`, 뺄셈 `-`, 곱셈 놀이터 `x`입니다. 퀴즈 진행, 타이머, 피드백, 결과 화면은 세 놀이터가 같은 엔진을 씁니다.
 - **타이머:** `requestAnimationFrame`으로 마감 시각까지 남은 시간을 계산하고, 탭이 가려지면(`visibilitychange`) 멈춥니다. 제한 시간은 문제의 연산과 단계로 정해지며, 곱셈 놀이터는 0(제한 없음)이라 타이머를 시작하지 않습니다.

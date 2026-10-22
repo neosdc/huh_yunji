@@ -1,0 +1,16 @@
+# 음성 제작 작업물. 참조 음원과 합성 결과에는 저작권이 있어서 이 공개 저장소에 올리지 않는다.
+# 완성된 mp3는 Supabase 비공개 버킷(protected-assets)에만 올린다.
+audio-raw/
+audio-out/
+audio-old/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+
+# 대본은 build_script.py가 index.html에서 만들어 내는 중간 파일이다.
+script.json
+
+__pycache__/
+*.pyc
