@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<link rel="stylesheet" href="phonics.css">
 <style>
 /* 방안지 위에 한 줄짜리 컬럼. 홈의 주인공은 8×9 구구단 표이고, 단마다 색이 있어 익힐수록 칸이 채워진다. */
 :root {
@@ -173,7 +174,8 @@ button:disabled { opacity: .4; cursor: default; }
 .pick-tools { display: flex; gap: .5rem; }
 
 /* 놀이터 메뉴 */
-.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-bottom: 1rem; }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-bottom: 1rem; }
+@media (max-width: 23.5rem) { .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tab {
   font-family: var(--font-d); font-size: 1.05rem; padding: .6rem .2rem; white-space: nowrap;
   background: var(--card); color: var(--ink);
@@ -444,6 +446,7 @@ body { margin: 0; }
       <button class="tab" id="tab-mul" data-tab="mul" aria-pressed="true">구구단</button>
       <button class="tab" id="tab-as" data-tab="as" aria-pressed="false">덧셈·뺄셈</button>
       <button class="tab" id="tab-ml" data-tab="ml" aria-pressed="false">곱셈</button>
+      <button class="tab" id="tab-ph" data-tab="ph" aria-pressed="false">파닉스</button>
     </div>
     <div id="mulHome">
     <div id="nyHome"></div>
@@ -473,11 +476,13 @@ body { margin: 0; }
     </div>
     <div id="asHome" hidden></div>
     <div id="mlHome" hidden></div>
+    <div id="phHome" hidden></div>
   </section>
 
   <section id="learn" hidden></section>
   <section id="quiz" hidden></section>
   <section id="result" hidden></section>
+  <section id="ph" hidden></section>
 
 </div>
 
@@ -486,6 +491,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="voice.js"></script>
+<script src="phonics.js"></script>
 <script>
 (function () {
   'use strict';
@@ -534,7 +540,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     s.sound = s.sound !== false;
     if (!(s.sel >= 2 && s.sel <= 9)) s.sel = 2;
     s.custom = inRange(Array.isArray(s.custom) ? s.custom : [2, 3, 4], 2, 9);
-    if (s.tab !== 'as' && s.tab !== 'ml') s.tab = 'mul';
+    if (s.tab !== 'as' && s.tab !== 'ml' && s.tab !== 'ph') s.tab = 'mul';
+    if (!s.ph || typeof s.ph !== 'object') s.ph = {};   /* 파닉스 놀이터 진행 (phonics.js 가 채운다) */
     if (!s.ml || typeof s.ml !== 'object') s.ml = {};
     if (!(s.ml.lv >= 0 && s.ml.lv <= 5)) s.ml.lv = 1;
     if (!s.ml.best || typeof s.ml.best !== 'object') s.ml.best = {};
@@ -556,6 +563,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   /* 천만냥냥 음성. 로그인·승인된 사용자만 받을 수 있고, 못 받으면 소리 없이 넘어간다 */
   var voice = null, voiceWantPreload = false, voiceSeq = 0, nyBusy = null, nyGreeted = false;
   var touched = false;   /* 이 페이지를 연 뒤 한 번이라도 눌렀는가. 누르기 전에는 브라우저가 소리를 막는다 */
+  var ph = null;           /* 파닉스 놀이터 (phonics.js) */
   var SYNC = { timer: 0, inflight: false, again: false, p: null, bad: false };
   var AQ = [];            /* 아직 서버로 보내지 않은 풀이 기록 */
   var AFLY = false;
@@ -696,6 +704,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     nyBusy = null;
     try { window.speechSynthesis.cancel(); } catch (e) {}
     if (voice) voice.stop();
+    if (ph) ph.stopAudio();
   }
   /* 천만냥냥 대사를 음성 파일로 재생한다. 소리가 꺼져 있거나 파일이 없으면 아무것도 하지 않는다. */
   function nyVoice(text) {
@@ -724,7 +733,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   }
 
   /* ---------- 화면 전환 ---------- */
-  var screens = ['auth', 'profiles', 'start', 'home', 'learn', 'quiz', 'result'];
+  var screens = ['auth', 'profiles', 'start', 'home', 'learn', 'quiz', 'result', 'ph'];
   function show(name) {
     screens.forEach(function (n) { $('#' + n).hidden = n !== name; });
     window.scrollTo(0, 0);
@@ -797,6 +806,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 
   function renderHome() {
     hush();
+    if (ph) ph.leave();
     if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
     flushAttempts();
     setHue(store.sel);
@@ -808,6 +818,11 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     paintTabs();
     if (store.tab === 'as') { renderAS(); show('home'); return; }
     if (store.tab === 'ml') { renderML(); show('home'); return; }
+    if (store.tab === 'ph') {
+      setHue(7);
+      if (ph) ph.renderHome(); else $('#phHome').innerHTML = '<p class="msg">파닉스 놀이터를 불러오지 못했어요. 새로고침해 주세요.</p>';
+      show('home'); return;
+    }
 
     var hiText = nyHi();
     $('#nyHome').innerHTML = nyRow('lg', hiText, '', true);
@@ -1184,11 +1199,13 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     $('#tab-mul').setAttribute('aria-pressed', String(t === 'mul'));
     $('#tab-as').setAttribute('aria-pressed', String(t === 'as'));
     $('#tab-ml').setAttribute('aria-pressed', String(t === 'ml'));
+    $('#tab-ph').setAttribute('aria-pressed', String(t === 'ph'));
     $('#mulHome').hidden = t !== 'mul';
     $('#asHome').hidden = t !== 'as';
     $('#mlHome').hidden = t !== 'ml';
-    $('#homeTitle').textContent = t === 'as' ? '덧셈·뺄셈 놀이터' : t === 'ml' ? '곱셈 놀이터' : '구구단 놀이터';
-    $('#homeSub').textContent = t === 'as' ? '연산과 단계를 고르고 하나씩 익혀 보세요.' : t === 'ml' ? '여러 자리 수 곱셈을 단계별로 익혀 보세요.' : '표에서 단을 고르고, 한 칸씩 색칠해 보세요.';
+    $('#phHome').hidden = t !== 'ph';
+    $('#homeTitle').textContent = t === 'as' ? '덧셈·뺄셈 놀이터' : t === 'ml' ? '곱셈 놀이터' : t === 'ph' ? '파닉스 놀이터' : '구구단 놀이터';
+    $('#homeSub').textContent = t === 'as' ? '연산과 단계를 고르고 하나씩 익혀 보세요.' : t === 'ml' ? '여러 자리 수 곱셈을 단계별로 익혀 보세요.' : t === 'ph' ? '소리를 듣고 글자와 단어를 익혀 보세요.' : '표에서 단을 고르고, 한 칸씩 색칠해 보세요.';
   }
 
   function levelBtn(op, lv, sel) {
@@ -2072,6 +2089,15 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   /* 화면을 떠나거나 숨길 때 아직 못 올린 것을 올려 본다 */
   document.addEventListener('visibilitychange', function () { if (document.hidden) flushAll(); });
   window.addEventListener('pagehide', function () { flushAll(); });
+
+  /* 파닉스 놀이터는 phonics.js 가 게임을 맡고, 앱은 저장·화면·소리 버튼을 빌려준다 */
+  if (window.createPhonics) {
+    ph = window.createPhonics({
+      getStore: function () { return store; },
+      save: save, show: show, setHue: setHue, sndBtn: sndBtn, tone: tone, esc: esc, starSvg: starSvg,
+      goHome: renderHome
+    });
+  }
 
   boot();
 })();

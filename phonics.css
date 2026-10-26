@@ -1,0 +1,93 @@
+/* 파닉스 놀이터 (phonics.js). 색과 테두리는 index.html 의 변수를 그대로 쓴다. */
+:root { --font-en: "Comic Sans MS", "Baloo 2", "Nunito", system-ui, sans-serif; }
+.ph-en { font-family: var(--font-en); }
+
+#phHome, #ph { display: flex; flex-direction: column; gap: 1.1rem; }
+#phHome[hidden], #ph[hidden] { display: none; }
+#phHome .stats { margin-bottom: 0; }
+#ph .top { margin-bottom: 0; }
+#ph .top .title { font-size: 1.3rem; }
+
+/* 단계 목록 */
+.ph-stage {
+  display: flex; align-items: center; gap: .7rem; width: 100%; min-width: 0; text-align: left;
+  padding: .55rem .8rem; background: var(--card); color: var(--ink);
+  border: 2.5px solid var(--edge); border-radius: 14px; box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.ph-stage:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.ph-stage b { font-weight: 400; font-size: 1.15rem; letter-spacing: .08em; }
+.ph-link { background: none; border: 0; color: var(--ink-2); text-decoration: underline; font-size: .85rem; padding: .3rem; }
+.ph-err p { margin-top: .4rem; }
+
+/* 단계 화면 */
+.ph-modes { display: flex; flex-direction: column; gap: .7rem; }
+.ph-mode {
+  display: flex; align-items: center; gap: .8rem; width: 100%; min-width: 0; text-align: left;
+  padding: .7rem .9rem; background: color-mix(in srgb, var(--c) 40%, var(--card)); color: var(--ink);
+  border: 2.5px solid var(--edge); border-radius: 16px; box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.ph-mode:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.ph-ico { font-size: 2.2rem; line-height: 1; flex: none; }
+.ph-tag { font-family: var(--font-b); font-size: .75rem; padding: .05rem .5rem; margin-left: .3rem; background: var(--card); border: 2px solid var(--edge); border-radius: 999px; vertical-align: middle; }
+.ph-mastery { gap: .6rem; }
+.ph-mrow { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ph-chip { min-width: 3.4rem; padding: .25rem .6rem; text-align: center; background: var(--card); border: 2px solid var(--edge); border-radius: 12px; font-size: 1.3rem; line-height: 1.2; }
+.ph-chip small { display: block; font-family: var(--font-b); font-size: .7rem; color: var(--ink-2); }
+.ph-chip.done { background: color-mix(in srgb, var(--good) 25%, var(--card)); }
+
+/* 게임 공통 */
+.ph-prog { display: flex; align-items: center; gap: .7rem; }
+.ph-count { color: var(--ink-2); font-size: .95rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#phBody { display: flex; flex-direction: column; align-items: center; gap: .9rem; }
+.ph-prompt { font-family: var(--font-d); font-size: 1.3rem; text-align: center; }
+.ph-msg { min-height: 1.8rem; font-family: var(--font-d); font-size: 1.15rem; text-align: center; }
+.ph-speaker {
+  width: 8rem; height: 8rem; border-radius: 50%; font-size: 3.4rem; line-height: 1;
+  background: var(--h); border: 2.5px solid var(--edge); box-shadow: 0 6px 0 var(--edge-shadow);
+}
+.ph-speaker:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge-shadow); }
+.ph-speaker.playing { animation: ph-pulse .6s infinite alternate; }
+@keyframes ph-pulse { to { transform: scale(1.07); } }
+.ph-options { display: flex; gap: .8rem; justify-content: center; width: 100%; }
+.ph-card {
+  flex: 1; min-width: 0; background: var(--card); color: var(--ink);
+  border: 2.5px solid var(--edge); border-radius: 20px; box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.ph-card.letter { max-width: 10rem; aspect-ratio: 1; font-size: clamp(3rem, 18vw, 4.6rem); }
+.ph-card.wordcard { max-width: 11rem; min-height: 6.5rem; font-size: clamp(1.8rem, 9vw, 2.5rem); }
+.ph-card.ok { background: var(--good); color: var(--card); border-color: var(--good); transform: scale(1.05); }
+.ph-card.hint { border-color: var(--good); border-width: 4px; }
+.ph-card.no { background: var(--bad); color: var(--card); border-color: var(--bad); animation: ph-shake .35s; }
+@keyframes ph-shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.ph-dots { display: flex; gap: .8rem; min-height: 1.2rem; }
+.ph-dots i { width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--paper-2); border: 2px solid var(--edge); transition: transform .15s; }
+.ph-dots i.lit { background: var(--h); transform: scale(1.4); }
+
+/* 게임 B */
+.ph-pic { font-size: 5rem; line-height: 1; min-height: 5.5rem; display: flex; align-items: center; justify-content: center; }
+.ph-pic.none { font-size: 2.5rem; color: var(--ink-2); }
+.ph-listen { display: flex; gap: .6rem; }
+.ph-pill { font-family: var(--font-d); font-size: 1.05rem; padding: .45rem 1rem; background: var(--h); color: var(--on-solid); border: 2.5px solid var(--edge); border-radius: 999px; box-shadow: 0 3px 0 var(--edge-shadow); }
+.ph-pill.alt { background: var(--card); color: var(--ink); }
+.ph-pill:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.ph-slots { display: flex; gap: .6rem; }
+.ph-slot {
+  width: 4.6rem; height: 5.4rem; font-size: 3rem; display: flex; align-items: center; justify-content: center;
+  background: var(--card); color: var(--ink); border: 3px dashed var(--edge); border-radius: 16px;
+}
+.ph-slot.filled { border-style: solid; background: color-mix(in srgb, var(--h) 30%, var(--card)); }
+.ph-slot.lit { transform: scale(1.1); background: var(--h); color: var(--on-solid); }
+.ph-slot.ok { background: var(--good); color: var(--card); border-color: var(--good); border-style: solid; }
+.ph-slot.no { animation: ph-shake .35s; background: var(--bad); color: var(--card); border-color: var(--bad); border-style: solid; }
+.ph-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; width: 100%; max-width: 24rem; }
+.ph-tile {
+  aspect-ratio: 1.2; font-size: 2.9rem; line-height: 1; background: var(--h); color: var(--on-solid);
+  border: 2.5px solid var(--edge); border-radius: 16px; box-shadow: 0 4px 0 var(--edge-shadow);
+}
+.ph-tile:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
+.ph-wordshow { font-size: 2.4rem; min-height: 3rem; letter-spacing: .08em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-speaker.playing, .ph-card.no, .ph-slot.no { animation: none; }
+  .ph-dots i, .ph-stage, .ph-mode { transition: none; }
+}

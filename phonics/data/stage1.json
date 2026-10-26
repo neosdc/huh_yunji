@@ -1,0 +1,206 @@
+{
+  "stage": 1,
+  "title": "s a t p i n",
+  "mainGames": [
+    "A",
+    "B"
+  ],
+  "sounds": [
+    {
+      "id": "s",
+      "ipa": "/s/",
+      "audio": "audio/phonemes/s.mp3",
+      "hint": "sss"
+    },
+    {
+      "id": "a_short",
+      "ipa": "/æ/",
+      "audio": "audio/phonemes/a_short.mp3",
+      "hint": "ah"
+    },
+    {
+      "id": "t",
+      "ipa": "/t/",
+      "audio": "audio/phonemes/t.mp3",
+      "hint": "tuh"
+    },
+    {
+      "id": "p",
+      "ipa": "/p/",
+      "audio": "audio/phonemes/p.mp3",
+      "hint": "puh"
+    },
+    {
+      "id": "i_short",
+      "ipa": "/ɪ/",
+      "audio": "audio/phonemes/i_short.mp3",
+      "hint": "ih"
+    },
+    {
+      "id": "n",
+      "ipa": "/n/",
+      "audio": "audio/phonemes/n.mp3",
+      "hint": "nnn"
+    }
+  ],
+  "letters": [
+    {
+      "g": "s",
+      "sound": "s"
+    },
+    {
+      "g": "a",
+      "sound": "a_short"
+    },
+    {
+      "g": "t",
+      "sound": "t"
+    },
+    {
+      "g": "p",
+      "sound": "p"
+    },
+    {
+      "g": "i",
+      "sound": "i_short"
+    },
+    {
+      "g": "n",
+      "sound": "n"
+    }
+  ],
+  "words": [
+    {
+      "word": "sat",
+      "tiles": [
+        "s",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/sat.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "sit",
+      "tiles": [
+        "s",
+        "i",
+        "t"
+      ],
+      "audio": "audio/words/sit.mp3",
+      "emoji": "🪑"
+    },
+    {
+      "word": "sip",
+      "tiles": [
+        "s",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/sip.mp3",
+      "emoji": "🥤"
+    },
+    {
+      "word": "tap",
+      "tiles": [
+        "t",
+        "a",
+        "p"
+      ],
+      "audio": "audio/words/tap.mp3",
+      "emoji": "🚰"
+    },
+    {
+      "word": "tip",
+      "tiles": [
+        "t",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/tip.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "pin",
+      "tiles": [
+        "p",
+        "i",
+        "n"
+      ],
+      "audio": "audio/words/pin.mp3",
+      "emoji": "📌"
+    },
+    {
+      "word": "pit",
+      "tiles": [
+        "p",
+        "i",
+        "t"
+      ],
+      "audio": "audio/words/pit.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "pat",
+      "tiles": [
+        "p",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/pat.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "nap",
+      "tiles": [
+        "n",
+        "a",
+        "p"
+      ],
+      "audio": "audio/words/nap.mp3",
+      "emoji": "😴"
+    },
+    {
+      "word": "tan",
+      "tiles": [
+        "t",
+        "a",
+        "n"
+      ],
+      "audio": "audio/words/tan.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "tin",
+      "tiles": [
+        "t",
+        "i",
+        "n"
+      ],
+      "audio": "audio/words/tin.mp3",
+      "emoji": "🥫"
+    },
+    {
+      "word": "pan",
+      "tiles": [
+        "p",
+        "a",
+        "n"
+      ],
+      "audio": "audio/words/pan.mp3",
+      "emoji": "🍳"
+    }
+  ],
+  "sightWords": [
+    {
+      "word": "I",
+      "audio": "audio/sight/i.mp3",
+      "hint": "I"
+    },
+    {
+      "word": "a",
+      "audio": "audio/sight/a.mp3",
+      "hint": "uh"
+    }
+  ]
+}
