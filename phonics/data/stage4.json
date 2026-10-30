@@ -1,0 +1,276 @@
+{
+  "stage": 4,
+  "title": "f l j v w x y z qu",
+  "mainGames": [
+    "A",
+    "C"
+  ],
+  "sounds": [
+    {
+      "id": "f",
+      "ipa": "/f/",
+      "audio": "audio/phonemes/f.mp3",
+      "hint": "fff"
+    },
+    {
+      "id": "l",
+      "ipa": "/l/",
+      "audio": "audio/phonemes/l.mp3",
+      "hint": "lll"
+    },
+    {
+      "id": "j",
+      "ipa": "/dʒ/",
+      "audio": "audio/phonemes/j.mp3",
+      "hint": "juh"
+    },
+    {
+      "id": "v",
+      "ipa": "/v/",
+      "audio": "audio/phonemes/v.mp3",
+      "hint": "vvv"
+    },
+    {
+      "id": "w",
+      "ipa": "/w/",
+      "audio": "audio/phonemes/w.mp3",
+      "hint": "wuh"
+    },
+    {
+      "id": "x",
+      "ipa": "/ks/",
+      "audio": "audio/phonemes/x.mp3",
+      "hint": "ks"
+    },
+    {
+      "id": "y",
+      "ipa": "/j/",
+      "audio": "audio/phonemes/y.mp3",
+      "hint": "yuh"
+    },
+    {
+      "id": "z",
+      "ipa": "/z/",
+      "audio": "audio/phonemes/z.mp3",
+      "hint": "zzz"
+    },
+    {
+      "id": "qu",
+      "ipa": "/kw/",
+      "audio": "audio/phonemes/qu.mp3",
+      "hint": "kwuh"
+    }
+  ],
+  "letters": [
+    {
+      "g": "f",
+      "sound": "f"
+    },
+    {
+      "g": "l",
+      "sound": "l"
+    },
+    {
+      "g": "j",
+      "sound": "j"
+    },
+    {
+      "g": "v",
+      "sound": "v"
+    },
+    {
+      "g": "w",
+      "sound": "w"
+    },
+    {
+      "g": "x",
+      "sound": "x"
+    },
+    {
+      "g": "y",
+      "sound": "y"
+    },
+    {
+      "g": "z",
+      "sound": "z"
+    },
+    {
+      "g": "qu",
+      "sound": "qu"
+    }
+  ],
+  "words": [
+    {
+      "word": "fan",
+      "tiles": [
+        "f",
+        "a",
+        "n"
+      ],
+      "audio": "audio/words/fan.mp3",
+      "emoji": "🪭"
+    },
+    {
+      "word": "fun",
+      "tiles": [
+        "f",
+        "u",
+        "n"
+      ],
+      "audio": "audio/words/fun.mp3",
+      "emoji": "🎉"
+    },
+    {
+      "word": "leg",
+      "tiles": [
+        "l",
+        "e",
+        "g"
+      ],
+      "audio": "audio/words/leg.mp3",
+      "emoji": "🦵"
+    },
+    {
+      "word": "log",
+      "tiles": [
+        "l",
+        "o",
+        "g"
+      ],
+      "audio": "audio/words/log.mp3",
+      "emoji": "🪵"
+    },
+    {
+      "word": "jam",
+      "tiles": [
+        "j",
+        "a",
+        "m"
+      ],
+      "audio": "audio/words/jam.mp3",
+      "emoji": "🫙"
+    },
+    {
+      "word": "jet",
+      "tiles": [
+        "j",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/jet.mp3",
+      "emoji": "✈️"
+    },
+    {
+      "word": "van",
+      "tiles": [
+        "v",
+        "a",
+        "n"
+      ],
+      "audio": "audio/words/van.mp3",
+      "emoji": "🚐"
+    },
+    {
+      "word": "vet",
+      "tiles": [
+        "v",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/vet.mp3",
+      "emoji": "🩺"
+    },
+    {
+      "word": "web",
+      "tiles": [
+        "w",
+        "e",
+        "b"
+      ],
+      "audio": "audio/words/web.mp3",
+      "emoji": "🕸️"
+    },
+    {
+      "word": "win",
+      "tiles": [
+        "w",
+        "i",
+        "n"
+      ],
+      "audio": "audio/words/win.mp3",
+      "emoji": "🏆"
+    },
+    {
+      "word": "box",
+      "tiles": [
+        "b",
+        "o",
+        "x"
+      ],
+      "audio": "audio/words/box.mp3",
+      "emoji": "📦"
+    },
+    {
+      "word": "six",
+      "tiles": [
+        "s",
+        "i",
+        "x"
+      ],
+      "audio": "audio/words/six.mp3",
+      "emoji": "6️⃣"
+    },
+    {
+      "word": "yes",
+      "tiles": [
+        "y",
+        "e",
+        "s"
+      ],
+      "audio": "audio/words/yes.mp3",
+      "emoji": "✅"
+    },
+    {
+      "word": "yet",
+      "tiles": [
+        "y",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/yet.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "zip",
+      "tiles": [
+        "z",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/zip.mp3",
+      "emoji": "🤐"
+    },
+    {
+      "word": "quit",
+      "tiles": [
+        "qu",
+        "i",
+        "t"
+      ],
+      "audio": "audio/words/quit.mp3",
+      "emoji": ""
+    }
+  ],
+  "sightWords": [
+    {
+      "word": "you",
+      "audio": "audio/sight/you.mp3",
+      "hint": "yoo"
+    },
+    {
+      "word": "are",
+      "audio": "audio/sight/are.mp3",
+      "hint": "ar"
+    }
+  ]
+}
