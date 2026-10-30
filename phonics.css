@@ -35,6 +35,9 @@
 .ph-chip small { display: block; font-family: var(--font-b); font-size: .7rem; color: var(--ink-2); }
 .ph-chip.done { background: color-mix(in srgb, var(--good) 25%, var(--card)); }
 
+/* 게임 중 천만냥냥: 말풍선이 없어도 자리를 비워 두어 화면이 흔들리지 않게 한다 */
+.nyang-row.ph-mini { --ny: 64px; min-height: 64px; }
+
 /* 게임 공통 */
 .ph-prog { display: flex; align-items: center; gap: .7rem; }
 .ph-count { color: var(--ink-2); font-size: .95rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
