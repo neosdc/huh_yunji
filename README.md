@@ -133,13 +133,13 @@ phonics/
 ├─ audio/
 │   ├─ phonemes/  소리 (직접 만든 음원)
 │   ├─ words/     단어 (로컬 Qwen3-TTS, 화자 Aiden으로 합성)
-│   └─ sight/     사이트 워드 (i a the to — 아직 없어 브라우저 음성으로 대체)
-└─ synth_phonics.py   단어 음원 합성·점검 스크립트
+│   └─ sight/     사이트 워드 (합성 스크립트가 만든다. 파일이 없으면 브라우저 음성으로 대체)
+└─ synth_phonics.py   단어·사이트 워드 음원 합성·점검 스크립트
 ```
 
 - **새 단계 추가:** `phonics/data/stageN.json`을 만들고 `phonics/data/stages.json`에 파일명을 추가한 뒤 `phonics/audio/` 파일을 채웁니다. 코드 수정은 필요 없습니다. 데이터가 어긋나면(철자와 `tiles`가 다르거나, 아직 배우지 않은 글자를 쓰는 경우 등) 게임 대신 오류 목록이 나옵니다.
 - **정답 판정:** 한 소리에 글자가 여럿(`c`/`k`)일 수 있어서 글자가 아니라 **소리** 기준으로 판정합니다.
-- **음원 합성 스크립트:** `pip install -U qwen-tts soundfile numpy`와 PATH의 `ffmpeg`가 필요합니다. `cd phonics && python synth_phonics.py words --dry-run`으로 대상만 확인하고, `python synth_phonics.py words --stage 2`로 합성하며, `python synth_phonics.py check --stage 2`로 JSON에 적힌 음원이 모두 있는지 점검합니다. 음소는 합성하지 않고 직접 만듭니다.
+- **음원 합성 스크립트:** `pip install -U qwen-tts soundfile numpy`와 PATH의 `ffmpeg`가 필요합니다. `cd phonics && python synth_phonics.py words --dry-run`으로 대상만 확인하고, `python synth_phonics.py words --stage 2`로 그 단계의 단어와 사이트 워드를 합성하며(이미 있는 파일은 건너뜀), `python synth_phonics.py check --stage 2`로 JSON에 적힌 음원이 모두 있는지 점검합니다. 사이트 워드는 철자대로 읽히지 않는 단어가 있어서 글자 대신 JSON의 `hint`(`uh`, `thuh` 등)를 읽히고, 마음에 들지 않으면 스크립트의 `WORD_TEXT_OVERRIDE`로 입력 문구를 바꿔 `--only 단어`로 다시 합성합니다. 음소는 합성하지 않고 직접 만듭니다.
 - 음원은 이 저장소(공개)에 그대로 들어 있어 정적 호스팅에서 누구나 받을 수 있습니다. 천만냥냥 음성처럼 승인된 계정만 받게 하려면 비공개 버킷으로 옮기고 `phonics.js`의 `sayItem()`에서 서명 URL로 재생하도록 바꿔야 합니다.
 
 ## 로그인과 데이터 저장

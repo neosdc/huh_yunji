@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-파닉스 단어 음원 합성 스크립트 — Qwen3-TTS CustomVoice, Speaker: Aiden
+파닉스 단어·사이트 워드 음원 합성 스크립트 — Qwen3-TTS CustomVoice, Speaker: Aiden
 
-단어 목록과 음원 경로는 data/stages.json → stageN.json 에서 읽는다(게임과 같은 파일). 어느 폴더에서 실행해도 이 스크립트가 있는 폴더 기준으로 파일이 생긴다.
+단어와 사이트 워드 목록, 음원 경로는 data/stages.json → stageN.json 에서 읽는다(게임과 같은 파일). 어느 폴더에서 실행해도 이 스크립트가 있는 폴더 기준으로 파일이 생긴다.
 
   audio/words/{word}.mp3          단어 (단계별 목록과 경로는 data/stageN.json 의 words[].audio)
+  audio/sight/{word}.mp3          사이트 워드 (sightWords[].audio). 입력 문구는 hint 값("uh", "thuh" 등)을 쓴다
   audio/_raw/words/{word}.wav     후처리 전 원본 wav (후처리 파라미터 조정용)
+  audio/_raw/sight/{word}.wav     사이트 워드 원본 wav
 
-음소(audio/phonemes/*.mp3)는 합성하지 않고 직접 만든다. 이 스크립트는 단어만 다룬다.
+음소(audio/phonemes/*.mp3)는 합성하지 않고 직접 만든다. 이 스크립트는 단어와 사이트 워드만 다룬다.
 (TTS 는 음소 단독 소리를 안정적으로 만들지 못한다. 철자 "t" 를 넣으면 글자 이름 "티"로 읽는다.)
 
 사용법
   python synth_phonics.py words                # 아직 없는 단어만 합성 (이미 있는 mp3 는 건너뜀)
-  python synth_phonics.py words --stage 2      # 2단계 단어만
+  python synth_phonics.py words --stage 2      # 2단계 단어와 사이트 워드만
   python synth_phonics.py words --dry-run      # 모델 없이 합성 대상만 출력
-  python synth_phonics.py words --only dog --seed 7   # 지정한 단어를 다시 합성 (기존 파일 덮어씀)
+  python synth_phonics.py words --only dog,the --seed 7   # 지정한 단어·사이트 워드를 다시 합성 (기존 파일 덮어씀)
   python synth_phonics.py words --force        # 이미 있는 파일도 모두 다시 합성
   python synth_phonics.py check [--stage 2]    # JSON 에 적힌 음원(소리, 단어, 사이트 워드)이 다 있는지 확인
 
@@ -53,7 +55,7 @@ WORD_INSTRUCT = "Say the word slowly and clearly, in a calm, friendly voice, lik
 
 WORD_TEXT = "{word}."  # 단어 합성 시 입력 문장. 억양이 어색하면 "{word}" 로 바꿔 본다.
 
-# 특정 단어만 입력 문구를 바꾸고 싶을 때 (예: 끝소리가 약하면 {"sat": "sat!"} 처럼 시도)
+# 특정 단어만 입력 문구를 바꾸고 싶을 때 (예: 끝소리가 약하면 {"sat": "sat!"} 처럼 시도). 사이트 워드도 같은 표를 쓴다.
 WORD_TEXT_OVERRIDE = {}
 
 # 단계별 콘텐츠는 코드에 두지 않고 data/stages.json → data/stageN.json 에서 읽는다(게임과 같은 파일).
@@ -68,6 +70,7 @@ WORD_TRIM_RATIO = 0.004   # 단어용: 약 -48 dB. 단어 끝 /t/ /p/ 의 약한
 WORD_TAIL_MS = 90         # 단어 끝에 남기는 여유
 
 RAW_DIR = "audio/_raw/words"   # 후처리 전 원본 wav (저장소에는 올리지 않음)
+RAW_SIGHT_DIR = "audio/_raw/sight"   # 사이트 워드 원본 wav
 
 
 # ----------------------------------------------------------------------------
@@ -221,14 +224,24 @@ def selected_stages(args, stages):
     return [args.stage] if args.stage else sorted(stages)
 
 
-def stage_words(stages, nums):
-    """[(단어, 음원 경로)] — 경로는 JSON 의 audio 값(프로젝트 루트 기준)."""
-    seen, out = set(), []
+def stage_items(stages, nums):
+    """{키: {"audio": 음원 경로, "text": 합성 입력 문구, "raw": 원본 wav 경로}} — 단어와 사이트 워드.
+    경로는 JSON 의 audio 값(프로젝트 루트 기준). 단계 순서대로, 같은 키는 한 번만 담는다.
+    사이트 워드는 철자대로 읽히지 않는 단어가 있어서(a → "에이", the → "디") 글자 대신 hint 를 읽힌다."""
+    out = {}
     for n in nums:
         for w in stages[n].get("words", []):
-            if w["word"] not in seen:
-                seen.add(w["word"])
-                out.append((w["word"], w["audio"]))
+            k = w["word"]
+            if k not in out:
+                out[k] = {"audio": w["audio"], "raw": f"{RAW_DIR}/{k}.wav",
+                          "text": WORD_TEXT_OVERRIDE.get(k, WORD_TEXT.format(word=k))}
+        for w in stages[n].get("sightWords", []):
+            # 일반 단어와 철자가 같은 사이트 워드(예: is)는 둘 다 만들어야 하므로 키를 "sight:is" 로 구분한다.
+            # 단어 목록에 이미 있는 철자일 때만 접두어가 붙고, --only 에도 이 키를 쓴다.
+            k = w["word"] if w["word"] not in out else f"sight:{w['word']}"
+            if k not in out:
+                out[k] = {"audio": w["audio"], "raw": f"{RAW_SIGHT_DIR}/{Path(w['audio']).stem}.wav",
+                          "text": WORD_TEXT_OVERRIDE.get(k, WORD_TEXT.format(word=w.get("hint") or w["word"]))}
     return out
 
 
@@ -240,12 +253,12 @@ def word_seed(base, word):
 def cmd_words(args):
     root = Path(args.root)
     stages = load_stages(root)
-    paths = dict(stage_words(stages, selected_stages(args, stages)))
-    words = pick_only(list(paths), args.only)
+    items = stage_items(stages, selected_stages(args, stages))
+    words = pick_only(list(items), args.only)
     overwrite = args.force or bool(args.only)
     todo = []
     for w in words:
-        if (root / paths[w]).exists() and not overwrite:
+        if (root / items[w]["audio"]).exists() and not overwrite:
             print(f"  {w:>4}  건너뜀 (이미 있음)")
         else:
             todo.append(w)
@@ -253,18 +266,18 @@ def cmd_words(args):
         print(f"합성 대상 {len(todo)}개: {', '.join(todo) if todo else '(없음)'}")
         return
     if not todo:
-        print("합성할 단어가 없습니다. (다시 합성하려면 --only 단어 또는 --force)")
+        print("합성할 단어·사이트 워드가 없습니다. (다시 합성하려면 --only 단어 또는 --force)")
         return
     need_ffmpeg()
     model = load_model(args)
     instruct = None if args.no_instruct else WORD_INSTRUCT
     for w in todo:
-        raw, sr = synth(model, WORD_TEXT_OVERRIDE.get(w, WORD_TEXT.format(word=w)), instruct, word_seed(args.seed, w))
-        write_wav(root / RAW_DIR / f"{w}.wav", raw, sr)
+        raw, sr = synth(model, items[w]["text"], instruct, word_seed(args.seed, w))
+        write_wav(root / items[w]["raw"], raw, sr)
         x = process_word(raw, sr)
-        write_mp3(root / paths[w], x, sr)
+        write_mp3(root / items[w]["audio"], x, sr)
         print(f"  {w:>4}  {len(x) / sr:.2f}s")
-    print("완료. 단어는 모두 귀로 한 번씩 확인하세요. 특히 끝소리(t, p, d, g)가 들리는지 확인합니다.")
+    print("완료. 모두 귀로 한 번씩 확인하세요. 단어는 끝소리(t, p, d, g)가 들리는지, 사이트 워드는 의도한 발음(a → uh, the → thuh)인지 확인합니다.")
 
 
 def cmd_check(args):
@@ -295,16 +308,16 @@ def cmd_check(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="파닉스 단어 음원 합성 (Qwen3-TTS, Aiden)")
+    ap = argparse.ArgumentParser(description="파닉스 단어·사이트 워드 음원 합성 (Qwen3-TTS, Aiden)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    pw = sub.add_parser("words", help="단어 음원 합성")
+    pw = sub.add_parser("words", help="단어·사이트 워드 음원 합성")
     pw.add_argument("--stage", type=int, default=None, help="해당 단계만 (기본: data/ 에 정의된 모든 단계)")
     pw.add_argument("--root", default=str(ROOT_DEFAULT), help="프로젝트 루트 (기본: 이 스크립트가 있는 폴더)")
     pw.add_argument("--model", default=DEFAULT_MODEL)
     pw.add_argument("--device", default=None, help="예: cuda:0, mps, cpu (기본: 자동)")
     pw.add_argument("--seed", type=int, default=1234)
-    pw.add_argument("--only", default=None, help="쉼표로 구분한 일부 단어만 (기존 파일 덮어씀)")
+    pw.add_argument("--only", default=None, help="쉼표로 구분한 일부 단어·사이트 워드만 (기존 파일 덮어씀)")
     pw.add_argument("--force", action="store_true", help="이미 있는 파일도 다시 합성")
     pw.add_argument("--dry-run", action="store_true", help="모델을 불러오지 않고 합성 대상만 출력")
     pw.add_argument("--no-instruct", action="store_true")
