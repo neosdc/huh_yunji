@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
 <link rel="stylesheet" href="phonics.css">
+<link rel="stylesheet" href="dashboard.css">
 <style>
 /* 방안지 위에 한 줄짜리 컬럼. 홈의 주인공은 8×9 구구단 표이고, 단마다 색이 있어 익힐수록 칸이 채워진다. */
 :root {
@@ -483,6 +484,7 @@ body { margin: 0; }
   <section id="quiz" hidden></section>
   <section id="result" hidden></section>
   <section id="ph" hidden></section>
+  <section id="dash" hidden></section>
 
 </div>
 
@@ -492,6 +494,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="voice.js"></script>
 <script src="phonics.js"></script>
+<script src="dashboard.js"></script>
 <script>
 (function () {
   'use strict';
@@ -632,15 +635,37 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     persistAttempts();
     if (AQ.length >= 10) flushAttempts();
   }
+  /* 파닉스 풀이(소리·단어 하나)도 같은 대기열에 모았다가 ph_attempts 로 올린다. 대시보드가 푼 문제 수를 셀 때 쓴다. */
+  function logPhonics(r) {
+    if (!profile) return;
+    AQ.push({
+      profile_id: profile.id, played_at: new Date().toISOString(), stage: r.stage, game: r.game,
+      item: String(r.item).slice(0, 40), correct: !!r.correct, first_try: !!r.first
+    });
+    if (AQ.length > 500) AQ.splice(0, AQ.length - 500);
+    persistAttempts();
+    if (AQ.length >= 10) flushAttempts();
+  }
+  function isPhAttempt(r) { return r && r.game !== undefined; }
+  /* 두 테이블로 따로 올려서, 한쪽이 실패해도(예: 파닉스 테이블이 아직 없을 때) 다른 쪽 기록은 계속 올라가게 한다. */
   function flushAttempts() {
     if (!sb || !profile || !AQ.length || AFLY) return Promise.resolve();
     var batch = AQ.slice(), pid = profile.id;
+    var main = batch.filter(function (r) { return !isPhAttempt(r); }), phr = batch.filter(isPhAttempt);
     AFLY = true;
-    return Promise.resolve(sb.from('attempts').insert(batch)).then(function (r) {
-      if (r && r.error) throw r.error;
-      if (profile && profile.id === pid) { AQ.splice(0, batch.length); persistAttempts(); } else lsDel(AKEY + pid);
+    function send(table, rows) {
+      if (!rows.length) return Promise.resolve(true);
+      return Promise.resolve(sb.from(table).insert(rows)).then(function (r) { return !(r && r.error); }).catch(function () { return false; });
+    }
+    return Promise.all([send('attempts', main), send('ph_attempts', phr)]).then(function (ok) {
+      var left = (ok[0] ? [] : main).concat(ok[1] ? [] : phr);   /* 올리지 못한 기록 */
+      if (profile && profile.id === pid) {
+        AQ = AQ.filter(function (r) { return batch.indexOf(r) < 0 || left.indexOf(r) >= 0; });
+        persistAttempts();
+      } else if (left.length) lsSet(AKEY + pid, JSON.stringify(left));
+      else lsDel(AKEY + pid);
       AFLY = false;
-    }).catch(function () { AFLY = false; });
+    });
   }
   function flushAll() { return Promise.all([pushState(), flushAttempts()]).catch(function () {}); }
   function withTimeout(pr, ms) { return Promise.race([pr, new Promise(function (res) { setTimeout(res, ms); })]); }
@@ -733,7 +758,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   }
 
   /* ---------- 화면 전환 ---------- */
-  var screens = ['auth', 'profiles', 'start', 'home', 'learn', 'quiz', 'result', 'ph'];
+  var screens = ['auth', 'profiles', 'start', 'home', 'learn', 'quiz', 'result', 'ph', 'dash'];
   function show(name) {
     screens.forEach(function (n) { $('#' + n).hidden = n !== name; });
     window.scrollTo(0, 0);
@@ -812,7 +837,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     setHue(store.sel);
     document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
     document.querySelector('[data-slot="acct"]').innerHTML = profile
-      ? '<button class="btn small" data-act="profiles" aria-label="프로필 바꾸기">' + esc(profile.name) + ' ▾</button><span class="syncerr" id="syncErr" hidden>저장하지 못했어요. 다시 시도하고 있어요.</span>'
+      ? '<button class="btn small" data-act="profiles" aria-label="프로필 바꾸기">' + esc(profile.name) + ' ▾</button><button class="btn small" data-act="dash" aria-label="활동 기록 보기">📊 기록</button><span class="syncerr" id="syncErr" hidden>저장하지 못했어요. 다시 시도하고 있어요.</span>'
       : '';
     setSyncMsg(SYNC.bad);
     paintTabs();
@@ -1767,6 +1792,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     else if (act === 'logout') logout();
     else if (act === 'retry') { if (user) afterLogin(); else if (sb) { showGate('loading'); Promise.resolve(sb.auth.getSession()).then(function (r) { var ss = r && r.data && r.data.session; if (ss) { user = ss.user; afterLogin(); } else showGate('login'); }).catch(function () { showGate('error'); }); } else location.reload(); }
     else if (act === 'profiles') { withTimeout(flushAll(), 3000).then(function () { return fetchProfiles(); }).then(function (l) { profiles = l; showProfiles(); }).catch(function () { showProfiles(); }); }
+    else if (act === 'dash') openDashboard('home');
+    else if (act === 'dash-profiles') openDashboard('profiles');
     else if (act === 'prof-add') addProfile();
     else if (act === 'home') renderHome();
     else if (act === 'snd') { store.sound = !store.sound; save(); if (!store.sound) hush(); paintSnd(); }
@@ -1920,6 +1947,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     $('#profiles').innerHTML =
       '<header class="top"><div><h1>누가 놀까요?</h1><p class="sub">놀이할 프로필을 골라 주세요.</p></div></header>' +
       (profiles.length ? '<div class="plist">' + h + '</div>' : '<p class="msg" style="margin:.5rem 0">아직 프로필이 없어요. 아래에서 첫 프로필을 만들어 주세요.</p>') +
+      (profiles.length ? '<button class="btn wide" data-act="dash-profiles" style="margin-top:1rem">📊 활동 기록 보기</button>' : '') +
       '<div class="card box" style="margin-top:1rem">' + add + (msg ? '<p class="err" role="alert">' + esc(msg) + '</p>' : '') + '</div>' +
       '<div class="acct-foot" style="margin-top:1rem"><span>' + esc(user && user.email ? user.email : '') + '</span><button class="btn small" data-act="logout">로그아웃</button></div>';
     show('profiles');
@@ -2095,8 +2123,25 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     ph = window.createPhonics({
       getStore: function () { return store; },
       save: save, show: show, setHue: setHue, sndBtn: sndBtn, tone: tone, esc: esc, starSvg: starSvg,
-      goHome: renderHome
+      goHome: renderHome, logAnswer: logPhonics
     });
+  }
+
+  /* 기록 대시보드는 dashboard.js 가 화면을 맡고, 앱은 로그인한 계정의 프로필 목록과 이동을 빌려준다 */
+  var dash = null;
+  if (window.createDashboard) {
+    dash = window.createDashboard({
+      getSb: function () { return sb; },
+      getStore: function () { return store; },
+      getProfileId: function () { return profile ? profile.id : ''; },
+      listProfiles: function () { return fetchProfiles().then(function (l) { profiles = l; return l; }); },
+      show: show, esc: esc,
+      back: function (from) { if (from === 'profiles' || !profile) showProfiles(); else renderHome(); }
+    });
+  }
+  function openDashboard(from) {
+    if (!dash) return;
+    withTimeout(flushAll(), 3000).then(function () { dash.open(from); });   /* 방금 푼 기록이 보이도록 먼저 올린다 */
   }
 
   boot();

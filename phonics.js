@@ -301,12 +301,17 @@
       var at = Math.min(G.i + CFG.retryGap, G.queue.length);
       G.queue.splice(at, 0, { key: entry.key, retry: true });
     }
+    function logAnswer(entry, ok) {   /* 앱이 풀이 기록을 받을 수 있으면 답 하나를 넘긴다 (대시보드의 푼 문제 수) */
+      if (host.logAnswer) host.logAnswer({ stage: G.stage, game: G.kind, item: entry.key, correct: ok, first: !entry.retry });
+    }
     function hit(entry) {
       record(GAME_META[G.kind].prefix + entry.key, true);
+      logAnswer(entry, true);
       if (!entry.retry) G.firstTryOk++;
     }
     function miss(entry) {
       record(GAME_META[G.kind].prefix + entry.key, false);
+      logAnswer(entry, false);
       if (!entry.retry) G.missed.push(entry.key);
       requeue(entry);
       updateProgress();

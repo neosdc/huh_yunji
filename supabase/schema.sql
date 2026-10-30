@@ -173,3 +173,65 @@ insert into storage.buckets (id, name, public) values ('protected-assets', 'prot
 drop policy if exists protected_assets_select on storage.objects;
 create policy protected_assets_select on storage.objects for select to authenticated
   using (bucket_id = 'protected-assets' and public.is_approved());
+
+-- 6) 파닉스 풀이 기록과 대시보드 ------------------------------------------------
+-- 파닉스 놀이터의 답 하나하나를 기록합니다(attempts 와 같은 방식). attempts 는 두 수(a, b)와 연산이 필요해서 따로 둡니다.
+create table if not exists public.ph_attempts (
+  id         bigint generated always as identity primary key,
+  profile_id uuid not null references public.profiles (id) on delete cascade,
+  played_at  timestamptz not null default now(),
+  stage      int not null,
+  game       text not null check (game in ('A', 'B', 'C', 'D')),   -- 소리 고르기 / 단어 만들기 / 소리 합치기 / 사이트 워드
+  item       text not null check (char_length(item) <= 40),         -- 소리 id 또는 단어
+  correct    boolean not null,
+  first_try  boolean not null                                       -- 틀려서 다시 나온 문제가 아니라 처음 나온 문제인지
+);
+create index if not exists ph_attempts_profile_time_idx on public.ph_attempts (profile_id, played_at desc);
+
+alter table public.ph_attempts enable row level security;
+revoke all on public.ph_attempts from anon, authenticated;
+grant select, insert on public.ph_attempts to authenticated;
+
+drop policy if exists ph_attempts_select on public.ph_attempts;
+drop policy if exists ph_attempts_insert on public.ph_attempts;
+create policy ph_attempts_select on public.ph_attempts for select to authenticated
+  using (public.owns_profile(profile_id));
+create policy ph_attempts_insert on public.ph_attempts for insert to authenticated
+  with check (public.owns_profile(profile_id));
+
+-- 대시보드용 집계. 하루 x 놀이터 x 모드별 풀이 수를 한 번에 돌려줍니다.
+--   n: 푼 문제(기록 수) / c: 맞힌 문제 / f: 처음 나온 문제 수 / fc: 처음 나온 문제 중 맞힌 수
+-- security invoker 라서 위의 RLS 가 그대로 적용됩니다. 로그인한 본인 계정의 프로필이 아니면 빈 결과가 나옵니다.
+-- 날짜는 p_tz(브라우저의 시간대) 기준으로 나눕니다.
+create or replace function public.dashboard_activity(p_profile uuid, p_days int default 200, p_tz text default 'Asia/Seoul')
+returns jsonb
+language sql stable set search_path = public
+as $$
+  with allr as (
+    select played_at, kind, mode, correct, first_try from public.attempts where profile_id = p_profile
+    union all
+    select played_at, 'ph'::text, 'play'::text, correct, first_try from public.ph_attempts where profile_id = p_profile
+  ),
+  daily as (
+    select (played_at at time zone p_tz)::date as d, kind, mode,
+           count(*)::int as n,
+           (count(*) filter (where correct))::int as c,
+           (count(*) filter (where first_try))::int as f,
+           (count(*) filter (where first_try and correct))::int as fc
+    from allr
+    where played_at >= now() - make_interval(days => greatest(p_days, 1) + 1)
+      and (played_at at time zone p_tz)::date >= (now() at time zone p_tz)::date - greatest(p_days, 1)
+    group by 1, 2, 3
+  ),
+  tot as (
+    select kind, count(*)::int as n, (count(*) filter (where correct))::int as c from allr group by kind
+  )
+  select jsonb_build_object(
+    'days', coalesce((select jsonb_agg(jsonb_build_object('d', d, 'k', kind, 'm', mode, 'n', n, 'c', c, 'f', f, 'fc', fc) order by d, kind, mode) from daily), '[]'::jsonb),
+    'totals', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'n', n, 'c', c)) from tot), '[]'::jsonb),
+    'first_at', (select min(played_at) from allr),
+    'last_at', (select max(played_at) from allr)
+  );
+$$;
+revoke all on function public.dashboard_activity(uuid, int, text) from public, anon;
+grant execute on function public.dashboard_activity(uuid, int, text) to authenticated;
