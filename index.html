@@ -770,7 +770,10 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     hi: ['{call}! 어서 와냥! 나는 천만냥냥이냥.', '오늘도 구구단으로 놀아 보냥?', '같이 구구단을 익혀 보냥!', '천만냥을 들고 응원하러 왔냥!', '{name}! 구구단 자신있냥?', '구구단은 다외우고 노냥?!'],
     ok: ['잘했냥', '좋냥', '멋지냥', '훌륭하냥', '대단하냥', '맞냥'],
     bad: ['아쉽냥', '아니냥', '틀렸냥', '노력해냥', '분발해냥'],
-    slow: ['시간이 없냥', '자냥', '졸고있냥', '모르냥', '느긋하냥', '뭐하냥']
+    slow: ['시간이 없냥', '자냥', '졸고있냥', '모르냥', '느긋하냥', '뭐하냥'],
+    /* 덧셈·뺄셈, 곱셈 놀이터 인사. 음성 파일은 없어서 말풍선 글자로만 나온다 */
+    hiAS: ['덧셈 뺄셈도 같이 해 보냥!', '숫자를 모으고 덜어 보냥?', '천만냥을 들고 응원하러 왔냥!'],
+    hiML: ['곱셈도 천천히 해 보냥!', '큰 숫자도 한 칸씩 풀면 된다냥!', '천만냥을 들고 응원하러 왔냥!']
   };
   var nyLast = '';
   function nameCall(n) {   /* 한글 이름일때 종성이 있으면 '아', 없으면 '야' */
@@ -1258,6 +1261,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
         '<div class="pick-tools"><button class="btn small" data-act="as-pickall">전체 선택</button><button class="btn small" data-act="as-pickclear">모두 해제</button></div>' +
         '<button class="btn primary wide" data-act="as-custom"' + (cu.length ? '' : ' disabled') + '>' + (cu.length ? cu.join('·') + '단계 도전하기 · 10문제' : '단계를 하나 이상 골라 주세요') + '</button></div>';
     $('#asHome').innerHTML =
+      nyRow('lg', nyPick(NY.hiAS), '', true) +
       '<div class="stats"><span class="stat">' + starSvg(true, 0) + '모은 별 <b>' + store.stars + '</b></span><span class="stat">맞힌 문제 <b>' + A.solved + '</b></span></div>' +
       '<div class="card box"><h3>무엇을 연습할까요?</h3><div class="picks three" role="group" aria-label="연산 고르기">' + opHtml + '</div></div>' +
       '<div class="box"><h3>단계 고르기</h3><div class="lvls" role="group" aria-label="단계 고르기">' + lvHtml + '</div></div>' +
@@ -1492,6 +1496,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     lvHtml += levelBtnML(0, lv);
     for (i = 1; i <= 5; i++) cuBtns += '<button class="pick" data-mlvpick="' + i + '" style="--c:var(--h)" aria-pressed="' + (cu.indexOf(i) >= 0) + '">' + i + '단계</button>';
     $('#mlHome').innerHTML =
+      nyRow('lg', nyPick(NY.hiML), '', true) +
       '<div class="stats"><span class="stat">' + starSvg(true, 0) + '모은 별 <b>' + store.stars + '</b></span><span class="stat">맞힌 문제 <b>' + M.solved + '</b></span></div>' +
       '<div class="box"><h3>단계 고르기</h3><div class="lvls" role="group" aria-label="단계 고르기">' + lvHtml + '</div></div>' +
       '<div class="panel"><div class="panel-head"><h2>곱셈</h2><span class="sub" style="margin:0">' + (lv ? lv + '단계' : '모든 단계') + '</span></div>' +
@@ -1607,7 +1612,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       '<div class="prog" role="progressbar" aria-label="진행" aria-valuemin="0" aria-valuemax="' + S.queue.length + '" aria-valuenow="' + S.idx + '"><i style="width:' + pct + '%"></i></div>' + sndBtn() + '</header>' +
       '<div class="meta"><span>' + (S.idx + 1) + ' / ' + S.queue.length + (S.opts.dans ? ' · ' + S.opts.dans.join('·') + '단' : S.opts.kind === 'ml' ? ' · 곱셈' + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : S.opts.kind === 'as' ? ' · ' + (S.opts.op === 'm' ? '섞어서' : OPN[S.opts.op]) + (S.opts.lvs ? ' ' + S.opts.lvs.join('·') + '단계' : S.opts.lv ? ' ' + S.opts.lv + '단계' : '') : '') + '</span><span class="streak' + (S.streak >= 2 ? ' on' : '') + '">연속 ' + S.streak + '번 맞힘</span></div>' +
       (limitOf(q) ? '<div class="timer" id="tbox" aria-hidden="true"><span class="tlabel">남은 시간</span><div class="bar"><i id="tbar"></i></div><b id="tnum">10</b></div>' : '') +
-      (opOf(q) === '*' ? nyRow('sm', '', 'nyBubble') : '') +
+      nyRow('sm', '', 'nyBubble') +
       '<div class="card q-card">' + (S.vq ? vqHtml(q) : '<div class="q' + (opOf(q) === '*' ? '' : ' sm' + (q.lv >= 5 || q.op === 'x' ? ' xl' : '')) + '"><span>' + q.a + '</span><span class="op">' + sym(q) + '</span><span>' + q.b + '</span><span class="op">=</span><span class="blank" id="blank" aria-live="polite">?</span></div>') + '</div>';
     if (S.mode === 'practice' && !S.vq) {
       h += '<div class="choices">' + q.opts.map(function (v, i) {
@@ -1659,7 +1664,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       blank.textContent = ok ? p : timedOut ? (S.input || '?') : (S.mode === 'challenge' ? S.input : val);
       blank.className = 'blank ' + (ok ? 'good' : 'bad');
     }
-    if (opOf(q) === '*') nySay(ok ? 'ok' : 'bad');
+    nySay(ok ? 'ok' : 'bad');
     var list = document.querySelectorAll('.choice, .key, .vcell');
     for (var i = 0; i < list.length; i++) {
       list[i].disabled = true;
@@ -1700,7 +1705,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   function tick() {
     if (!S || S.locked) return;
     S.left = S.deadline - performance.now();
-    if (!S.slowSaid && S.limit && S.left <= S.limit / 2 && opOf(S.queue[S.idx]) === '*') { S.slowSaid = true; nySay('slow'); }
+    if (!S.slowSaid && S.limit && S.left <= S.limit / 2) { S.slowSaid = true; nySay('slow'); }
     if (S.left <= 0) { S.left = 0; paintTimer(); answer(null, null, true); return; }
     paintTimer();
     S.raf = requestAnimationFrame(tick);
@@ -1765,7 +1770,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     $('#result').innerHTML =
       '<header class="top"><span></span><span></span>' + sndBtn() + '</header>' +
       '<div class="card result">' +
-        (S.queue[0] && opOf(S.queue[0]) === '*' ? nyResult(S.ok, n) : '') +
+        nyResult(S.ok, n) +
         '<div class="stars">' + starSvg(stars >= 1, 0) + starSvg(stars >= 2, 1) + starSvg(stars >= 3, 2) + '</div>' +
         '<h2>' + head + '</h2>' +
         '<p>' + n + '문제 중 ' + S.ok + '문제를 한 번에 맞혔어요.</p>' +
