@@ -564,7 +564,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   var CFG = window.GUGUDAN_CONFIG || {};
   var sb = null, user = null, profile = null, profiles = [];
   /* 천만냥냥 음성. 로그인·승인된 사용자만 받을 수 있고, 못 받으면 소리 없이 넘어간다 */
-  var voice = null, voiceWantPreload = false, voiceSeq = 0, nyBusy = null, nyGreeted = false;
+  var voice = null, voiceWantPreload = false, voiceSeq = 0, nyBusy = null, nyGreetedTab = '';
   var touched = false;   /* 이 페이지를 연 뒤 한 번이라도 눌렀는가. 누르기 전에는 브라우저가 소리를 막는다 */
   var ph = null;           /* 파닉스 놀이터 (phonics.js) */
   var SYNC = { timer: 0, inflight: false, again: false, p: null, bad: false };
@@ -741,9 +741,11 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     return p;
   }
 
-  /* 인사는 홈에 올 때마다 말하면 시끄러우니 한 번만 소리로 들려준다 (자동재생이 막혀 못 냈으면 다음에 다시 시도) */
+  /* 인사는 놀이터를 바꿀 때 소리로 들려준다. 게임을 하다가 같은 놀이터의 홈으로 돌아올 때마다 말하면 시끄러우니
+     그때는 말하지 않는다. (자동재생이 막혀 못 냈으면 다음에 다시 시도) */
   function nyGreet(text) {
-    if (!nyGreeted) nyVoice(text).then(function (ok) { if (ok) nyGreeted = true; });
+    var tab = store.tab;
+    if (nyGreetedTab !== tab) nyVoice(text).then(function (ok) { if (ok) nyGreetedTab = tab; });
   }
 
   var ICON_ON ='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -863,8 +865,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 
     var hiText = nyHi();
     $('#nyHome').innerHTML = nyRow('lg', hiText, '', true);
-    /* 인사는 홈에 올 때마다 말하면 시끄러우니 한 번만 소리로 들려준다 (자동재생이 막혀 못 냈으면 다음에 다시 시도) */
-    if (!nyGreeted) nyVoice(nyHiTpl).then(function (ok) { if (ok) nyGreeted = true; });
+    nyGreet(nyHiTpl);   /* 놀이터를 바꿔서 왔을 때만 소리로 말한다 */
     var h = '<div class="corner"></div>';
     var a, b, l, done = 0, rowDone = 0;
     for (b = 1; b <= 9; b++) h += '<div class="colhead">' + b + '</div>';
@@ -2083,7 +2084,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     store = normalize(freshStore());
     if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
     hush();
-    nyGreeted = false; voiceWantPreload = false;
+    nyGreetedTab = ''; voiceWantPreload = false;
     if (voice) voice.clearCache();   /* 내려받아 둔 음성 파일도 지운다 */
   }
   function logout() {
