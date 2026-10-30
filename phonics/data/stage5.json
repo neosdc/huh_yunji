@@ -1,0 +1,213 @@
+{
+  "stage": 5,
+  "title": "a e i o u",
+  "mainGames": [
+    "C",
+    "B"
+  ],
+  "sounds": [],
+  "letters": [],
+  "words": [
+    {
+      "word": "bat",
+      "tiles": [
+        "b",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/bat.mp3",
+      "emoji": "🦇"
+    },
+    {
+      "word": "bet",
+      "tiles": [
+        "b",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/bet.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bit",
+      "tiles": [
+        "b",
+        "i",
+        "t"
+      ],
+      "audio": "audio/words/bit.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bot",
+      "tiles": [
+        "b",
+        "o",
+        "t"
+      ],
+      "audio": "audio/words/bot.mp3",
+      "emoji": "🤖"
+    },
+    {
+      "word": "but",
+      "tiles": [
+        "b",
+        "u",
+        "t"
+      ],
+      "audio": "audio/words/but.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "pet",
+      "tiles": [
+        "p",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/pet.mp3",
+      "emoji": "🐕"
+    },
+    {
+      "word": "pot",
+      "tiles": [
+        "p",
+        "o",
+        "t"
+      ],
+      "audio": "audio/words/pot.mp3",
+      "emoji": "🍲"
+    },
+    {
+      "word": "cup",
+      "tiles": [
+        "c",
+        "u",
+        "p"
+      ],
+      "audio": "audio/words/cup.mp3",
+      "emoji": "🥛"
+    },
+    {
+      "word": "cop",
+      "tiles": [
+        "c",
+        "o",
+        "p"
+      ],
+      "audio": "audio/words/cop.mp3",
+      "emoji": "👮"
+    },
+    {
+      "word": "hut",
+      "tiles": [
+        "h",
+        "u",
+        "t"
+      ],
+      "audio": "audio/words/hut.mp3",
+      "emoji": "🛖"
+    },
+    {
+      "word": "bag",
+      "tiles": [
+        "b",
+        "a",
+        "g"
+      ],
+      "audio": "audio/words/bag.mp3",
+      "emoji": "👜"
+    },
+    {
+      "word": "big",
+      "tiles": [
+        "b",
+        "i",
+        "g"
+      ],
+      "audio": "audio/words/big.mp3",
+      "emoji": "🐘"
+    },
+    {
+      "word": "beg",
+      "tiles": [
+        "b",
+        "e",
+        "g"
+      ],
+      "audio": "audio/words/beg.mp3",
+      "emoji": "🙏"
+    },
+    {
+      "word": "lap",
+      "tiles": [
+        "l",
+        "a",
+        "p"
+      ],
+      "audio": "audio/words/lap.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "lip",
+      "tiles": [
+        "l",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/lip.mp3",
+      "emoji": "👄"
+    },
+    {
+      "word": "lot",
+      "tiles": [
+        "l",
+        "o",
+        "t"
+      ],
+      "audio": "audio/words/lot.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "let",
+      "tiles": [
+        "l",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/let.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "net",
+      "tiles": [
+        "n",
+        "e",
+        "t"
+      ],
+      "audio": "audio/words/net.mp3",
+      "emoji": "🥅"
+    },
+    {
+      "word": "not",
+      "tiles": [
+        "n",
+        "o",
+        "t"
+      ],
+      "audio": "audio/words/not.mp3",
+      "emoji": "🚫"
+    },
+    {
+      "word": "nut",
+      "tiles": [
+        "n",
+        "u",
+        "t"
+      ],
+      "audio": "audio/words/nut.mp3",
+      "emoji": "🥜"
+    }
+  ],
+  "sightWords": []
+}
