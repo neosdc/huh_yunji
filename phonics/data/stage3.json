@@ -1,0 +1,206 @@
+{
+  "stage": 3,
+  "title": "e u r h b",
+  "mainGames": [
+    "B",
+    "C"
+  ],
+  "sounds": [
+    {
+      "id": "e_short",
+      "ipa": "/ɛ/",
+      "audio": "audio/phonemes/e_short.mp3",
+      "hint": "eh"
+    },
+    {
+      "id": "u_short",
+      "ipa": "/ʌ/",
+      "audio": "audio/phonemes/u_short.mp3",
+      "hint": "uh"
+    },
+    {
+      "id": "r",
+      "ipa": "/r/",
+      "audio": "audio/phonemes/r.mp3",
+      "hint": "rrr"
+    },
+    {
+      "id": "h",
+      "ipa": "/h/",
+      "audio": "audio/phonemes/h.mp3",
+      "hint": "huh"
+    },
+    {
+      "id": "b",
+      "ipa": "/b/",
+      "audio": "audio/phonemes/b.mp3",
+      "hint": "buh"
+    }
+  ],
+  "letters": [
+    {
+      "g": "e",
+      "sound": "e_short"
+    },
+    {
+      "g": "u",
+      "sound": "u_short"
+    },
+    {
+      "g": "r",
+      "sound": "r"
+    },
+    {
+      "g": "h",
+      "sound": "h"
+    },
+    {
+      "g": "b",
+      "sound": "b"
+    }
+  ],
+  "words": [
+    {
+      "word": "hen",
+      "tiles": [
+        "h",
+        "e",
+        "n"
+      ],
+      "audio": "audio/words/hen.mp3",
+      "emoji": "🐔"
+    },
+    {
+      "word": "pen",
+      "tiles": [
+        "p",
+        "e",
+        "n"
+      ],
+      "audio": "audio/words/pen.mp3",
+      "emoji": "🖊️"
+    },
+    {
+      "word": "red",
+      "tiles": [
+        "r",
+        "e",
+        "d"
+      ],
+      "audio": "audio/words/red.mp3",
+      "emoji": "🔴"
+    },
+    {
+      "word": "bed",
+      "tiles": [
+        "b",
+        "e",
+        "d"
+      ],
+      "audio": "audio/words/bed.mp3",
+      "emoji": "🛏️"
+    },
+    {
+      "word": "bug",
+      "tiles": [
+        "b",
+        "u",
+        "g"
+      ],
+      "audio": "audio/words/bug.mp3",
+      "emoji": "🐛"
+    },
+    {
+      "word": "hug",
+      "tiles": [
+        "h",
+        "u",
+        "g"
+      ],
+      "audio": "audio/words/hug.mp3",
+      "emoji": "🤗"
+    },
+    {
+      "word": "run",
+      "tiles": [
+        "r",
+        "u",
+        "n"
+      ],
+      "audio": "audio/words/run.mp3",
+      "emoji": "🏃"
+    },
+    {
+      "word": "rub",
+      "tiles": [
+        "r",
+        "u",
+        "b"
+      ],
+      "audio": "audio/words/rub.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "hot",
+      "tiles": [
+        "h",
+        "o",
+        "t"
+      ],
+      "audio": "audio/words/hot.mp3",
+      "emoji": "🔥"
+    },
+    {
+      "word": "hat",
+      "tiles": [
+        "h",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/hat.mp3",
+      "emoji": "👒"
+    },
+    {
+      "word": "bus",
+      "tiles": [
+        "b",
+        "u",
+        "s"
+      ],
+      "audio": "audio/words/bus.mp3",
+      "emoji": "🚌"
+    },
+    {
+      "word": "hum",
+      "tiles": [
+        "h",
+        "u",
+        "m"
+      ],
+      "audio": "audio/words/hum.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "cub",
+      "tiles": [
+        "c",
+        "u",
+        "b"
+      ],
+      "audio": "audio/words/cub.mp3",
+      "emoji": "🐻"
+    }
+  ],
+  "sightWords": [
+    {
+      "word": "is",
+      "audio": "audio/sight/is.mp3",
+      "hint": "iz"
+    },
+    {
+      "word": "my",
+      "audio": "audio/sight/my.mp3",
+      "hint": "my"
+    }
+  ]
+}

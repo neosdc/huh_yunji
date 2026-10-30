@@ -1,6 +1,7 @@
 {
   "stages": [
     "stage1.json",
-    "stage2.json"
+    "stage2.json",
+    "stage3.json"
   ]
 }
