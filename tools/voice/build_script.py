@@ -1,6 +1,6 @@
 """음성 합성용 대본(script.json)과 게임용 매니페스트(manifest.json) 생성기.
 
-- 천만냥냥 대사: 게임(index.html)의 `var NY = {...}` 대사 표와 결과 메시지(nyResult)를 직접 읽는다.
+- 천만냥냥 대사: 게임(index.html)의 `var NY = {...}` 대사 표(결과 대사 result 포함)를 직접 읽는다.
   게임의 대사를 고치면 이 스크립트를 다시 실행해 대본을 맞춘다. (대사의 단일 출처는 index.html)
   이름이 들어가는 대사({call}, {name})는 이름을 미리 합성할 수 없으므로 이름 부분을 뺀 문장만 합성한다.
   (예: "{call}! 어서 와냥!" -> 음성은 "어서 와냥!", 말풍선에는 "영희야! 어서 와냥!")
@@ -48,7 +48,7 @@ N_RANGE = range(1, 10)     # x1 ~ x9
 
 
 def read_game_lines(html_path: Path) -> dict[str, list[str]]:
-    """index.html에서 천만냥냥 대사 표(NY)와 결과 메시지를 읽는다. -> {종류: [대사, ...]}"""
+    """index.html에서 천만냥냥 대사 표(NY, 결과 대사 result 포함)를 읽는다. -> {종류: [대사, ...]}"""
     src = html_path.read_text(encoding="utf-8")
     block = re.search(r"var NY = \{(.*?)\n\s*\};", src, re.S)
     if not block:
@@ -56,9 +56,6 @@ def read_game_lines(html_path: Path) -> dict[str, list[str]]:
     lines: dict[str, list[str]] = {}
     for m in re.finditer(r"(\w+)\s*:\s*\[(.*?)\]", block.group(1), re.S):
         lines[m.group(1)] = list(ast.literal_eval("[" + m.group(2) + "]"))
-    result = re.search(r"var msg = perfect(.*?);", src, re.S)   # nyResult()의 결과 메시지
-    if result:
-        lines["result"] = re.findall(r"'([^']*)'", result.group(1))
     return lines
 
 
