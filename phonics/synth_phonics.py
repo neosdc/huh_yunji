@@ -236,10 +236,12 @@ def stage_items(stages, nums):
                 out[k] = {"audio": w["audio"], "raw": f"{RAW_DIR}/{k}.wav",
                           "text": WORD_TEXT_OVERRIDE.get(k, WORD_TEXT.format(word=k))}
         for w in stages[n].get("sightWords", []):
-            k = w["word"]
+            # 일반 단어와 철자가 같은 사이트 워드(예: is)는 둘 다 만들어야 하므로 키를 "sight:is" 로 구분한다.
+            # 단어 목록에 이미 있는 철자일 때만 접두어가 붙고, --only 에도 이 키를 쓴다.
+            k = w["word"] if w["word"] not in out else f"sight:{w['word']}"
             if k not in out:
                 out[k] = {"audio": w["audio"], "raw": f"{RAW_SIGHT_DIR}/{Path(w['audio']).stem}.wav",
-                          "text": WORD_TEXT_OVERRIDE.get(k, WORD_TEXT.format(word=w.get("hint") or k))}
+                          "text": WORD_TEXT_OVERRIDE.get(k, WORD_TEXT.format(word=w.get("hint") or w["word"]))}
     return out
 
 
