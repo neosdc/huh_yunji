@@ -5,6 +5,9 @@
   이름이 들어가는 대사({call}, {name})는 이름을 미리 합성할 수 없으므로 이름 부분을 뺀 문장만 합성한다.
   (예: "{call}! 어서 와냥!" -> 음성은 "어서 와냥!", 말풍선에는 "영희야! 어서 와냥!")
   이름 자리가 문장 맨 앞이 아니면 이름만 빼면 문장이 어색해지므로 합성 대상에서 제외한다.
+- 파닉스 놀이터 대사: phonics.js의 `var NY_PH = {...}` 중 PHONICS_VOICE_KINDS에 적은 종류만 읽는다.
+  (정답/오답 반응 NY_REACT와 단계 화면 대사 stage는 음성 없이 말풍선 글자로만 나오므로 합성하지 않는다)
+- 같은 문장이 여러 곳에 있으면 한 번만 합성한다. 게임은 문장으로 클립을 찾으므로 하나면 충분하다.
 - 구구단 정답 읽기: INCLUDE_GUGUDAN_ANSWER = True 일 때만 포함한다. 기본값은 False.
 
 사용 (저장소의 tools/voice 폴더에서):
@@ -59,6 +62,26 @@ def read_game_lines(html_path: Path) -> dict[str, list[str]]:
     return lines
 
 
+# 파닉스 대사 중 음성을 만드는 종류. NY_PH의 키 이름이다. (hi 인사, s3/s2/s1 별 개수별 결과 대사)
+PHONICS_VOICE_KINDS = ["hi", "s3", "s2", "s1"]
+
+
+def read_phonics_lines(js_path: Path) -> dict[str, list[str]]:
+    """phonics.js에서 파닉스 천만냥냥 대사 표(NY_PH)를 읽는다. -> {ph_종류: [대사, ...]}"""
+    if not js_path.exists():
+        print(f"[알림] {js_path}이 없어 파닉스 대사는 건너뛴다")
+        return {}
+    src = js_path.read_text(encoding="utf-8")
+    block = re.search(r"var NY_PH = \{(.*?)\n\s*\};", src, re.S)
+    if not block:
+        raise SystemExit(f"{js_path}에서 'var NY_PH = {{...}}' 를 찾지 못했다")
+    lines: dict[str, list[str]] = {}
+    for m in re.finditer(r"(\w+)\s*:\s*\[(.*?)\]", block.group(1), re.S):
+        if m.group(1) in PHONICS_VOICE_KINDS:
+            lines["ph_" + m.group(1)] = list(ast.literal_eval("[" + m.group(2) + "]"))
+    return lines
+
+
 def strip_name(text: str) -> str | None:
     """'{call}! 어서 와냥!' -> '어서 와냥!' 처럼 문장 맨 앞의 이름 자리와 그 뒤 문장부호를 뺀다.
     이름 자리가 문장 맨 앞이 아니거나(예: '오늘은 {name} 차례'), 뺀 뒤 남는 문장이 없으면 None."""
@@ -80,7 +103,10 @@ def build(html_path: Path) -> list[dict]:
                     "text": gugudan_answer(dan, n),
                 })
     skipped = []
-    for kind, lines in read_game_lines(html_path).items():
+    seen: dict[str, str] = {}   # 합성하는 문장 -> 처음 만든 키
+    all_lines = read_game_lines(html_path)
+    all_lines.update(read_phonics_lines(html_path.parent / "phonics.js"))
+    for kind, lines in all_lines.items():
         for i, text in enumerate(lines, 1):   # 번호는 원래 순서 기준이라 대사를 뒤에 추가해도 키가 안 바뀐다
             item = {
                 "key": f"nyang/{kind}_{i:02d}",
@@ -96,6 +122,11 @@ def build(html_path: Path) -> list[dict]:
                 item["text"] = spoken
                 item["source"] = text
                 print(f"[이름 제외] {text}  ->  {spoken}")
+            spoken_text = item["text"]
+            if spoken_text in seen:
+                print(f"[중복 제외] {item['key']} : {spoken_text}  (이미 {seen[spoken_text]}에 있다)")
+                continue
+            seen[spoken_text] = item["key"]
             items.append(item)
     for text in skipped:
         print(f"[제외] 이름 자리가 문장 맨 앞이 아니라 이름만 빼면 문장이 어색해진다: {text}")

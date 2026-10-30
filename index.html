@@ -741,7 +741,12 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     return p;
   }
 
-  var ICON_ON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  /* 인사는 홈에 올 때마다 말하면 시끄러우니 한 번만 소리로 들려준다 (자동재생이 막혀 못 냈으면 다음에 다시 시도) */
+  function nyGreet(text) {
+    if (!nyGreeted) nyVoice(text).then(function (ok) { if (ok) nyGreeted = true; });
+  }
+
+  var ICON_ON ='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   var ICON_OFF = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   function sndBtn() {
     return '<button class="icon-btn snd" data-act="snd" aria-pressed="' + store.sound + '" aria-label="소리 켜기 끄기">' + (store.sound ? ICON_ON : ICON_OFF) + '</button>';
@@ -771,7 +776,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     ok: ['잘했냥', '좋냥', '멋지냥', '훌륭하냥', '대단하냥', '맞냥'],
     bad: ['아쉽냥', '아니냥', '틀렸냥', '노력해냥', '분발해냥'],
     slow: ['시간이 없냥', '자냥', '졸고있냥', '모르냥', '느긋하냥', '뭐하냥'],
-    /* 덧셈·뺄셈, 곱셈 놀이터 인사. 음성 파일은 없어서 말풍선 글자로만 나온다 */
+    /* 덧셈·뺄셈, 곱셈 놀이터 인사 */
     hiAS: ['덧셈 뺄셈도 같이 해 보냥!', '숫자를 모으고 덜어 보냥?', '천만냥을 들고 응원하러 왔냥!'],
     hiML: ['곱셈도 천천히 해 보냥!', '큰 숫자도 한 칸씩 풀면 된다냥!', '천만냥을 들고 응원하러 왔냥!']
   };
@@ -1260,8 +1265,10 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
         '<div class="picks three" role="group" aria-label="도전할 단계 고르기">' + cuBtns + '</div>' +
         '<div class="pick-tools"><button class="btn small" data-act="as-pickall">전체 선택</button><button class="btn small" data-act="as-pickclear">모두 해제</button></div>' +
         '<button class="btn primary wide" data-act="as-custom"' + (cu.length ? '' : ' disabled') + '>' + (cu.length ? cu.join('·') + '단계 도전하기 · 10문제' : '단계를 하나 이상 골라 주세요') + '</button></div>';
+    var hi = nyPick(NY.hiAS);
+    nyGreet(hi);
     $('#asHome').innerHTML =
-      nyRow('lg', nyPick(NY.hiAS), '', true) +
+      nyRow('lg', hi, '', true) +
       '<div class="stats"><span class="stat">' + starSvg(true, 0) + '모은 별 <b>' + store.stars + '</b></span><span class="stat">맞힌 문제 <b>' + A.solved + '</b></span></div>' +
       '<div class="card box"><h3>무엇을 연습할까요?</h3><div class="picks three" role="group" aria-label="연산 고르기">' + opHtml + '</div></div>' +
       '<div class="box"><h3>단계 고르기</h3><div class="lvls" role="group" aria-label="단계 고르기">' + lvHtml + '</div></div>' +
@@ -1495,8 +1502,10 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     for (i = 1; i <= 5; i++) lvHtml += levelBtnML(i, lv);
     lvHtml += levelBtnML(0, lv);
     for (i = 1; i <= 5; i++) cuBtns += '<button class="pick" data-mlvpick="' + i + '" style="--c:var(--h)" aria-pressed="' + (cu.indexOf(i) >= 0) + '">' + i + '단계</button>';
+    var hi = nyPick(NY.hiML);
+    nyGreet(hi);
     $('#mlHome').innerHTML =
-      nyRow('lg', nyPick(NY.hiML), '', true) +
+      nyRow('lg', hi, '', true) +
       '<div class="stats"><span class="stat">' + starSvg(true, 0) + '모은 별 <b>' + store.stars + '</b></span><span class="stat">맞힌 문제 <b>' + M.solved + '</b></span></div>' +
       '<div class="box"><h3>단계 고르기</h3><div class="lvls" role="group" aria-label="단계 고르기">' + lvHtml + '</div></div>' +
       '<div class="panel"><div class="panel-head"><h2>곱셈</h2><span class="sub" style="margin:0">' + (lv ? lv + '단계' : '모든 단계') + '</span></div>' +
@@ -2128,7 +2137,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     ph = window.createPhonics({
       getStore: function () { return store; },
       save: save, show: show, setHue: setHue, sndBtn: sndBtn, tone: tone, esc: esc, starSvg: starSvg,
-      nyRow: nyRow, nyPick: nyPick,
+      nyRow: nyRow, nyPick: nyPick, nyVoice: nyVoice, nyGreet: nyGreet, stopVoice: function () { if (voice) voice.stop(); },
       goHome: renderHome, logAnswer: logPhonics
     });
   }

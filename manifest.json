@@ -91,6 +91,22 @@
     "path": "voice/v1/nyang/slow_06.mp3",
     "text": "뭐하냥"
   },
+  "nyang/hiAS_01": {
+    "path": "voice/v1/nyang/hiAS_01.mp3",
+    "text": "덧셈 뺄셈도 같이 해 보냥!"
+  },
+  "nyang/hiAS_02": {
+    "path": "voice/v1/nyang/hiAS_02.mp3",
+    "text": "숫자를 모으고 덜어 보냥?"
+  },
+  "nyang/hiML_01": {
+    "path": "voice/v1/nyang/hiML_01.mp3",
+    "text": "곱셈도 천천히 해 보냥!"
+  },
+  "nyang/hiML_02": {
+    "path": "voice/v1/nyang/hiML_02.mp3",
+    "text": "큰 숫자도 한 칸씩 풀면 된다냥!"
+  },
   "nyang/result_01": {
     "path": "voice/v1/nyang/result_01.mp3",
     "text": "훌륭하냥!"
@@ -106,5 +122,45 @@
   "nyang/result_04": {
     "path": "voice/v1/nyang/result_04.mp3",
     "text": "더 많은 노력이 필요하냥"
+  },
+  "nyang/ph_hi_01": {
+    "path": "voice/v1/nyang/ph_hi_01.mp3",
+    "text": "오늘은 글자가 내는 소리를 찾아보냥!"
+  },
+  "nyang/ph_hi_02": {
+    "path": "voice/v1/nyang/ph_hi_02.mp3",
+    "text": "귀를 쫑긋 세우고 소리를 들어 보냥?"
+  },
+  "nyang/ph_hi_03": {
+    "path": "voice/v1/nyang/ph_hi_03.mp3",
+    "text": "같이 파닉스로 놀아 보냥!"
+  },
+  "nyang/ph_hi_05": {
+    "path": "voice/v1/nyang/ph_hi_05.mp3",
+    "text": "소리를 잘 들으면 영어가 읽힌다냥!"
+  },
+  "nyang/ph_s3_01": {
+    "path": "voice/v1/nyang/ph_s3_01.mp3",
+    "text": "훌륭하냥! 소리를 다 알아챘냥!"
+  },
+  "nyang/ph_s3_02": {
+    "path": "voice/v1/nyang/ph_s3_02.mp3",
+    "text": "대단하냥! 별 세 개냥!"
+  },
+  "nyang/ph_s2_01": {
+    "path": "voice/v1/nyang/ph_s2_01.mp3",
+    "text": "잘했냥! 한 판 더 해 보냥?"
+  },
+  "nyang/ph_s2_02": {
+    "path": "voice/v1/nyang/ph_s2_02.mp3",
+    "text": "좋냥! 조금만 더 하면 별 세 개냥!"
+  },
+  "nyang/ph_s1_01": {
+    "path": "voice/v1/nyang/ph_s1_01.mp3",
+    "text": "괜찮냥, 다시 들으면 더 잘할 수 있냥!"
+  },
+  "nyang/ph_s1_02": {
+    "path": "voice/v1/nyang/ph_s1_02.mp3",
+    "text": "노력했냥! 한 판 더 해 보냥?"
   }
 }
