@@ -153,6 +153,7 @@
       seq++;
       if (curAudio) { try { curAudio.pause(); } catch (e) {} curAudio = null; }
       if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch (e) {} }
+      if (host.stopVoice) host.stopVoice();   /* 천만냥냥 음성도 같이 끊는다 */
     }
     /* iOS Safari 등의 자동재생 제한: 첫 사용자 터치에서 오디오를 한 번 활성화한다. */
     function unlockAudio() {
@@ -604,10 +605,12 @@
       host.save();
       var label = function (k) { return g.kind === 'A' ? soundLabel(k) : k; };
       var uniq = g.missed.filter(function (x, i, a) { return a.indexOf(x) === i; });
+      var line = host.nyPick(NY_PH['s' + stars]);
       frame(GAME_META[g.kind].name, 'stage', '← ' + g.stage + '단계', false);
+      if (host.nyVoice) host.nyVoice(line);
       body().innerHTML =
         '<div class="card result">' +
-          host.nyRow('res' + (stars === 3 ? ' float' : ''), host.nyPick(NY_PH['s' + stars]), '', true) +
+          host.nyRow('res' + (stars === 3 ? ' float' : ''), line, '', true) +
           '<h2>수고했어요!</h2>' +
           '<div class="stars">' + host.starSvg(stars >= 1, 0) + host.starSvg(stars >= 2, 1) + host.starSvg(stars >= 3, 2) + '</div>' +
           '<p>' + n + '문제 중 ' + ok + '문제를 바로 맞혔어요.</p>' +
@@ -623,7 +626,9 @@
       return Object.keys(s).reduce(function (a, k) { return a + (+s[k] || 0); }, 0);
     }
     function starRow(n) { return host.starSvg(n >= 1, 0) + host.starSvg(n >= 2, 1) + host.starSvg(n >= 3, 2); }
-    /* 천만냥냥 (구구단 놀이터와 같은 캐릭터). 대사는 말풍선 글자로만 나온다 */
+    /* 천만냥냥 (구구단 놀이터와 같은 캐릭터). hi(인사)와 s3/s2/s1(결과)은 음성도 있고(tools/voice가 이 표를 읽어 만든다),
+       stage(단계 화면)와 NY_REACT(정답/오답)는 말풍선 글자로만 나온다. 음성 대상을 바꾸면 tools/voice/build_script.py의
+       PHONICS_VOICE_KINDS도 맞춘다. */
     var NY_PH = {
       hi: ['오늘은 글자가 내는 소리를 찾아보냥!', '귀를 쫑긋 세우고 소리를 들어 보냥?', '같이 파닉스로 놀아 보냥!', '천만냥을 들고 응원하러 왔냥!', '소리를 잘 들으면 영어가 읽힌다냥!'],
       stage: ['소리 하나씩 천천히 해 보냥!', '틀려도 괜찮냥, 다시 들으면 된다냥!', '한 판에 2~3분이면 충분하냥!'],
@@ -632,9 +637,10 @@
       s1: ['괜찮냥, 다시 들으면 더 잘할 수 있냥!', '노력했냥! 한 판 더 해 보냥?']
     };
     function paintHome(el) {
-      var p = P();
+      var p = P(), hi = host.nyPick(NY_PH.hi);
+      if (host.nyGreet) host.nyGreet(hi);
       el.innerHTML =
-        host.nyRow('lg', host.nyPick(NY_PH.hi), '', true) +
+        host.nyRow('lg', hi, '', true) +
         '<div class="stats"><span class="stat">' + host.starSvg(true, 0) + '모은 별 <b>' + totalStars() + '</b></span></div>' +
         '<div class="box"><h3>단계 고르기</h3><p class="sub" style="margin:0;font-size:.9rem">글자 이름이 아니라 글자가 내는 소리를 익혀요.</p><div class="lvls">' +
         STAGES.map(function (st) {
