@@ -129,7 +129,7 @@
 
 ```
 phonics/
-├─ data/      stages.json (단계 목록) · stage1.json ~ stage5.json
+├─ data/      stages.json (단계 목록) · stage1.json ~ stage6.json
 ├─ audio/
 │   ├─ phonemes/  소리 (직접 만든 음원)
 │   ├─ words/     단어 (로컬 Qwen3-TTS, 화자 Aiden으로 합성)
