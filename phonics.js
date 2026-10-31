@@ -351,7 +351,12 @@
        보기는 소리 기준으로 만든다. c 와 k 처럼 같은 소리를 내는 글자는 한 보기에 함께 나오지 않는다. */
     function renderA() {
       var g = G, entry = g.queue[g.i], target = SND[entry.key];
-      var others = shuffle(upto(g.stage, SND).map(function (s) { return s.id; }).filter(function (x) { return x !== target.id; })).slice(0, CFG.optionCount - 1);
+      var usedIpa = {}; usedIpa[target.ipa] = true;       /* k 와 ck 처럼 발음 기호가 같은 소리도 한 보기에 함께 나오지 않는다 */
+      var others = shuffle(upto(g.stage, SND).map(function (s) { return s.id; }).filter(function (x) { return x !== target.id; })).filter(function (x) {
+        if (usedIpa[SND[x].ipa]) return false;
+        usedIpa[SND[x].ipa] = true;
+        return true;
+      }).slice(0, CFG.optionCount - 1);
       var opts = shuffle([target.id].concat(others)).map(function (id) { return { id: id, g: randOf(SND[id].graphemes) }; });
       body().innerHTML =
         '<p class="ph-prompt">소리를 듣고 알맞은 글자를 골라요</p>' +
@@ -399,13 +404,14 @@
        타일은 단어에 쓰이는 글자 + 섞는 글자 3개. 같은 소리의 다른 철자(c/k)는 섞지 않는다. */
     function pickTiles(w, stage) {
       var need = w.tiles.filter(function (x, i, a) { return a.indexOf(x) === i; });
+      var ipaOf = function (g) { return SND[LET[g]].ipa; };   /* c, k, ck 처럼 발음 기호가 같으면 같은 소리로 본다 */
       var needSounds = {};
-      need.forEach(function (g) { needSounds[LET[g]] = true; });
-      var pool = Object.keys(LET).filter(function (g) { return LETSTAGE[g] <= stage && need.indexOf(g) < 0 && !needSounds[LET[g]]; });
+      need.forEach(function (g) { needSounds[ipaOf(g)] = true; });
+      var pool = Object.keys(LET).filter(function (g) { return LETSTAGE[g] <= stage && need.indexOf(g) < 0 && !needSounds[ipaOf(g)]; });
       var extra = [], used = Object.assign({}, needSounds);
-      shuffle(pool).forEach(function (g) {                   /* 섞는 글자끼리도 같은 소리(c/k)가 겹치지 않게 */
+      shuffle(pool).forEach(function (g) {                   /* 섞는 글자끼리도 같은 소리(c/k/ck)가 겹치지 않게 */
         if (extra.length >= CFG.extraTiles) return;
-        if (!used[LET[g]]) { used[LET[g]] = true; extra.push(g); }
+        if (!used[ipaOf(g)]) { used[ipaOf(g)] = true; extra.push(g); }
       });
       return shuffle(need.concat(extra));
     }

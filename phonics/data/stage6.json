@@ -1,0 +1,375 @@
+{
+  "stage": 6,
+  "title": "sh ch th ck ng",
+  "mainGames": [
+    "C",
+    "B"
+  ],
+  "sounds": [
+    {
+      "id": "sh",
+      "ipa": "/ʃ/",
+      "audio": "audio/phonemes/sh.mp3",
+      "hint": "shh"
+    },
+    {
+      "id": "ch",
+      "ipa": "/tʃ/",
+      "audio": "audio/phonemes/ch.mp3",
+      "hint": "chuh"
+    },
+    {
+      "id": "th",
+      "ipa": "/θ/",
+      "audio": "audio/phonemes/th.mp3",
+      "hint": "thh"
+    },
+    {
+      "id": "ck",
+      "ipa": "/k/",
+      "audio": "audio/phonemes/ck.mp3",
+      "hint": "kuh"
+    },
+    {
+      "id": "ng",
+      "ipa": "/ŋ/",
+      "audio": "audio/phonemes/ng.mp3",
+      "hint": "ng"
+    }
+  ],
+  "letters": [
+    {
+      "g": "sh",
+      "sound": "sh"
+    },
+    {
+      "g": "ch",
+      "sound": "ch"
+    },
+    {
+      "g": "th",
+      "sound": "th"
+    },
+    {
+      "g": "ck",
+      "sound": "ck"
+    },
+    {
+      "g": "ng",
+      "sound": "ng"
+    }
+  ],
+  "words": [
+    {
+      "word": "ship",
+      "tiles": [
+        "sh",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/ship.mp3",
+      "emoji": "🚢"
+    },
+    {
+      "word": "shop",
+      "tiles": [
+        "sh",
+        "o",
+        "p"
+      ],
+      "audio": "audio/words/shop.mp3",
+      "emoji": "🏪"
+    },
+    {
+      "word": "shed",
+      "tiles": [
+        "sh",
+        "e",
+        "d"
+      ],
+      "audio": "audio/words/shed.mp3",
+      "emoji": "🛖"
+    },
+    {
+      "word": "shut",
+      "tiles": [
+        "sh",
+        "u",
+        "t"
+      ],
+      "audio": "audio/words/shut.mp3",
+      "emoji": "🚪"
+    },
+    {
+      "word": "fish",
+      "tiles": [
+        "f",
+        "i",
+        "sh"
+      ],
+      "audio": "audio/words/fish.mp3",
+      "emoji": "🐟"
+    },
+    {
+      "word": "dish",
+      "tiles": [
+        "d",
+        "i",
+        "sh"
+      ],
+      "audio": "audio/words/dish.mp3",
+      "emoji": "🍽️"
+    },
+    {
+      "word": "wish",
+      "tiles": [
+        "w",
+        "i",
+        "sh"
+      ],
+      "audio": "audio/words/wish.mp3",
+      "emoji": "🌠"
+    },
+    {
+      "word": "chip",
+      "tiles": [
+        "ch",
+        "i",
+        "p"
+      ],
+      "audio": "audio/words/chip.mp3",
+      "emoji": "🍟"
+    },
+    {
+      "word": "chop",
+      "tiles": [
+        "ch",
+        "o",
+        "p"
+      ],
+      "audio": "audio/words/chop.mp3",
+      "emoji": "🪓"
+    },
+    {
+      "word": "chin",
+      "tiles": [
+        "ch",
+        "i",
+        "n"
+      ],
+      "audio": "audio/words/chin.mp3",
+      "emoji": "🙂"
+    },
+    {
+      "word": "chat",
+      "tiles": [
+        "ch",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/chat.mp3",
+      "emoji": "💬"
+    },
+    {
+      "word": "much",
+      "tiles": [
+        "m",
+        "u",
+        "ch"
+      ],
+      "audio": "audio/words/much.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "rich",
+      "tiles": [
+        "r",
+        "i",
+        "ch"
+      ],
+      "audio": "audio/words/rich.mp3",
+      "emoji": "💰"
+    },
+    {
+      "word": "thin",
+      "tiles": [
+        "th",
+        "i",
+        "n"
+      ],
+      "audio": "audio/words/thin.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "this",
+      "tiles": [
+        "th",
+        "i",
+        "s"
+      ],
+      "audio": "audio/words/this.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "that",
+      "tiles": [
+        "th",
+        "a",
+        "t"
+      ],
+      "audio": "audio/words/that.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "them",
+      "tiles": [
+        "th",
+        "e",
+        "m"
+      ],
+      "audio": "audio/words/them.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "with",
+      "tiles": [
+        "w",
+        "i",
+        "th"
+      ],
+      "audio": "audio/words/with.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bath",
+      "tiles": [
+        "b",
+        "a",
+        "th"
+      ],
+      "audio": "audio/words/bath.mp3",
+      "emoji": "🛁"
+    },
+    {
+      "word": "duck",
+      "tiles": [
+        "d",
+        "u",
+        "ck"
+      ],
+      "audio": "audio/words/duck.mp3",
+      "emoji": "🦆"
+    },
+    {
+      "word": "back",
+      "tiles": [
+        "b",
+        "a",
+        "ck"
+      ],
+      "audio": "audio/words/back.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "sock",
+      "tiles": [
+        "s",
+        "o",
+        "ck"
+      ],
+      "audio": "audio/words/sock.mp3",
+      "emoji": "🧦"
+    },
+    {
+      "word": "pick",
+      "tiles": [
+        "p",
+        "i",
+        "ck"
+      ],
+      "audio": "audio/words/pick.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "kick",
+      "tiles": [
+        "k",
+        "i",
+        "ck"
+      ],
+      "audio": "audio/words/kick.mp3",
+      "emoji": "🦶"
+    },
+    {
+      "word": "neck",
+      "tiles": [
+        "n",
+        "e",
+        "ck"
+      ],
+      "audio": "audio/words/neck.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "sing",
+      "tiles": [
+        "s",
+        "i",
+        "ng"
+      ],
+      "audio": "audio/words/sing.mp3",
+      "emoji": "🎤"
+    },
+    {
+      "word": "ring",
+      "tiles": [
+        "r",
+        "i",
+        "ng"
+      ],
+      "audio": "audio/words/ring.mp3",
+      "emoji": "💍"
+    },
+    {
+      "word": "king",
+      "tiles": [
+        "k",
+        "i",
+        "ng"
+      ],
+      "audio": "audio/words/king.mp3",
+      "emoji": "🤴"
+    },
+    {
+      "word": "wing",
+      "tiles": [
+        "w",
+        "i",
+        "ng"
+      ],
+      "audio": "audio/words/wing.mp3",
+      "emoji": "🪽"
+    },
+    {
+      "word": "sang",
+      "tiles": [
+        "s",
+        "a",
+        "ng"
+      ],
+      "audio": "audio/words/sang.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "rang",
+      "tiles": [
+        "r",
+        "a",
+        "ng"
+      ],
+      "audio": "audio/words/rang.mp3",
+      "emoji": "🔔"
+    }
+  ],
+  "sightWords": []
+}
