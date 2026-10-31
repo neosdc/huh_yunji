@@ -22,6 +22,23 @@
       ['해', '☀️'], ['달', '🌙'], ['별', '⭐'], ['구름', '☁️'], ['비', '🌧️'], ['꽃', '🌸'], ['나무', '🌳'], ['눈사람', '⛄'] ] }
   ];
 
+  /* 사진은 hangul/img/<낱말>.jpg (없으면 jpeg, png, webp 순). 하나도 없으면 이모지로 보여 준다 */
+  var IMG_DIR = 'hangul/img/', IMG_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+  function imgSrc(word, k) { return IMG_DIR + encodeURIComponent(word.normalize('NFC')) + '.' + IMG_EXTS[k]; }
+  /* 사진이 있을 것으로 보고 먼저 <img>를 그린다. 못 불러오면 아래 error 처리가 다음 확장자나 이모지로 바꾼다 */
+  function picHtml(word, emoji) {
+    return '<img class="hg-img" src="' + imgSrc(word, 0) + '" data-k="0" data-w="' + word + '" data-e="' + emoji + '" alt="">';
+  }
+  function onImgError(e) {
+    var im = e.target;
+    if (!im || im.tagName !== 'IMG' || !im.classList.contains('hg-img')) return;
+    var k = +im.dataset.k + 1;
+    if (k < IMG_EXTS.length) { im.dataset.k = k; im.src = imgSrc(im.dataset.w, k); return; }
+    var sp = document.createElement('span');
+    sp.className = 'hg-emoji'; sp.setAttribute('aria-hidden', 'true'); sp.textContent = im.dataset.e;
+    im.replaceWith(sp);
+  }
+
   function byId(id) { return document.getElementById(id); }
   function isSyl(ch) { var c = ch.charCodeAt(0); return c >= 0xAC00 && c <= 0xD7A3; }
 
@@ -47,7 +64,7 @@
       var seen = store().seen, t = TOPICS[view.topic];
       var cards = t.words.map(function (w, i) {
         return '<button class="hg-card' + (seen[w[0]] ? ' seen' : '') + '" data-hg="open" data-i="' + i + '" aria-label="' + esc(w[0]) + '">' +
-          '<span class="hg-pic" aria-hidden="true">' + w[1] + '</span><span class="hg-word">' + esc(w[0]) + '</span></button>';
+          '<span class="hg-pic" aria-hidden="true">' + picHtml(w[0], w[1]) + '</span><span class="hg-word">' + esc(w[0]) + '</span></button>';
       }).join('');
       byId('hgHome').innerHTML =
         '<div class="stats"><span class="stat">본 낱말 <b>' + seenCount() + '</b>/' + total() + '</span></div>' +
@@ -63,7 +80,7 @@
       }).join('');
       byId('hgHome').innerHTML =
         '<div class="card hg-big">' +
-          '<button class="hg-pic big" data-hg="hear" aria-label="' + esc(w[0]) + ' 듣기">' + w[1] + '</button>' +
+          '<button class="hg-pic big" data-hg="hear" aria-label="' + esc(w[0]) + ' 듣기">' + picHtml(w[0], w[1]) + '</button>' +
           '<div class="hg-word big" aria-label="' + esc(w[0]) + '">' + sylls + '</div>' +
           '<p class="note">글자를 하나씩 눌러도 읽어 줘요.</p>' +
           '<button class="btn primary wide" data-hg="hear">🔊 다시 듣기</button>' +
@@ -93,6 +110,7 @@
       else if (act === 'syl') host.hear(t.dataset.s);
     }
     byId('hgHome').addEventListener('click', onClick);
+    byId('hgHome').addEventListener('error', onImgError, true);   /* error 는 올라가지 않아서 캡처로 받는다 */
 
     return {
       /* 홈이 다시 그려질 때마다 부른다. 열어 둔 카드는 목록으로 돌려보낸다 */

@@ -12,7 +12,10 @@
 }
 .hg-card:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge-shadow); }
 .hg-card.seen { background: color-mix(in srgb, var(--h) 22%, var(--card)); }
-.hg-pic { font-size: 2.8rem; line-height: 1.1; }
+.hg-pic { display: block; font-size: 2.8rem; line-height: 1.1; }
+.hg-img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; background: var(--paper-2); }
+.hg-card .hg-pic { width: 100%; text-align: center; }
+.hg-pic.big .hg-img { width: min(100%, 18rem); margin: 0 auto; border-radius: 18px; }
 .hg-card .hg-word { font-size: 1.15rem; overflow-wrap: anywhere; text-align: center; }
 
 .hg-big { display: flex; flex-direction: column; align-items: center; gap: .9rem; padding: 1.2rem 1rem; }
