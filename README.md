@@ -8,13 +8,22 @@
 먼저 아래 "로그인과 데이터 저장"의 설정(Supabase 프로젝트, Google 로그인, `GUGUDAN_CONFIG`)을 해야 게임이 열립니다. 설정이 비어 있으면 "서비스 연결 설정이 아직 없어요" 화면만 나옵니다.
 
 - **로컬 서버:** 저장소 폴더에서 `python3 -m http.server 8000`을 실행하고 `http://localhost:8000`에 접속합니다. 이 주소를 Supabase의 Redirect URL에 등록해야 로그인이 됩니다. 로그인 때 주소가 필요해서 `index.html`을 파일로 바로 열면(`file://`) 로그인할 수 없습니다.
-- **호스팅:** 저장소 파일(`index.html`, `phonics.js`, `phonics.css`, `dashboard.js`, `dashboard.css`, `voice.js`, `manifest.json`, `phonics/`, `favicon.ico`)을 GitHub Pages, Nginx, S3 같은 정적 호스팅에 올리면 됩니다. 직접 운영하는 서버 코드는 없고, 로그인과 저장은 Supabase가 맡습니다. `favicon.ico`가 없어도 게임은 동작하고 탭 아이콘만 기본 모양으로 나옵니다.
+- **호스팅:** 저장소 파일(`index.html`, `phonics.js`, `phonics.css`, `hangul.js`, `hangul.css`, `dashboard.js`, `dashboard.css`, `voice.js`, `manifest.json`, `phonics/`, `favicon.ico`)을 GitHub Pages, Nginx, S3 같은 정적 호스팅에 올리면 됩니다. 직접 운영하는 서버 코드는 없고, 로그인과 저장은 Supabase가 맡습니다. `favicon.ico`가 없어도 게임은 동작하고 탭 아이콘만 기본 모양으로 나옵니다.
 
 제목 폰트(Jua, Gowun Dodum)는 Google Fonts에서 불러옵니다. 오프라인이거나 폰트를 불러오지 못하면 시스템 기본 폰트로 표시되며 동작에는 영향이 없습니다.
 
 ## 메뉴 구성
 
 홈 화면 상단 탭(구구단 / 덧셈·뺄셈 / 곱셈 / 파닉스)으로 네 놀이터를 전환합니다. 선택한 탭은 다음 접속 때도 유지됩니다.
+
+### 유치원 프로필과 한글 놀이터
+
+프로필을 만들 때 **유치원 / 초등** 중 하나를 고릅니다. 고른 값은 `profile_state.settings.category`(`kids` 또는 `elementary`)에 저장되고, 값이 없는 기존 프로필은 초등으로 봅니다. 유치원 프로필은 탭 없이 **한글 놀이터**(`hangul.js`, `hangul.css`)만 열립니다.
+
+- 낱말 묶음(동물, 먹을 것, 탈 것, 물건, 자연)에서 그림 카드를 누르면 낱말을 소리로 읽어 주고, 글자를 하나씩 눌러도 읽어 줍니다. 읽는 소리는 브라우저 음성(ko-KR)입니다. 그림은 이모지입니다.
+- 본 낱말은 `store.hg.seen`에 저장됩니다.
+- 홈의 **유치원 ⇄ / 초등 ⇄** 버튼으로 바꿀 수 있고, 아이가 잘못 누르지 않도록 두 번 눌러야 바뀝니다. 진행 상황은 종류별로 따로 남아 있어 다시 바꿔도 사라지지 않습니다.
+- 유치원 프로필은 활동 기록(📊) 버튼이 보이지 않습니다. 한글 놀이터는 풀이 기록을 남기지 않습니다.
 
 ### 활동 기록 대시보드
 

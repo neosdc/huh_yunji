@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
 <link rel="stylesheet" href="phonics.css">
+<link rel="stylesheet" href="hangul.css">
 <link rel="stylesheet" href="dashboard.css">
 <style>
 /* 방안지 위에 한 줄짜리 컬럼. 홈의 주인공은 8×9 구구단 표이고, 단마다 색이 있어 익힐수록 칸이 채워진다. */
@@ -443,7 +444,7 @@ body { margin: 0; }
       <span data-slot="snd"></span>
     </header>
     <div class="acct-bar" data-slot="acct"></div>
-    <div class="tabs" role="group" aria-label="놀이터 고르기">
+    <div class="tabs" id="tabs" role="group" aria-label="놀이터 고르기">
       <button class="tab" id="tab-mul" data-tab="mul" aria-pressed="true">구구단</button>
       <button class="tab" id="tab-as" data-tab="as" aria-pressed="false">덧셈·뺄셈</button>
       <button class="tab" id="tab-ml" data-tab="ml" aria-pressed="false">곱셈</button>
@@ -478,6 +479,7 @@ body { margin: 0; }
     <div id="asHome" hidden></div>
     <div id="mlHome" hidden></div>
     <div id="phHome" hidden></div>
+    <div id="hgHome" hidden></div>
   </section>
 
   <section id="learn" hidden></section>
@@ -494,6 +496,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="voice.js"></script>
 <script src="phonics.js"></script>
+<script src="hangul.js"></script>
 <script src="dashboard.js"></script>
 <script>
 (function () {
@@ -532,7 +535,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
   function lsJson(k) { try { return JSON.parse(lsGet(k)); } catch (e) { return null; } }
 
-  function freshStore() { return { facts: {}, stars: 0, sound: true, sel: 2 }; }
+  function freshStore() { return { facts: {}, stars: 0, sound: true, sel: 2, category: 'elementary' }; }
   function inRange(list, lo, hi) {
     return list.filter(function (d, i, arr) { return d >= lo && d <= hi && arr.indexOf(d) === i; }).sort(function (x, y) { return x - y; });
   }
@@ -541,6 +544,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     if (!s.facts || typeof s.facts !== 'object') s.facts = {};
     s.stars = +s.stars || 0;
     s.sound = s.sound !== false;
+    s.category = s.category === 'kids' ? 'kids' : 'elementary';   /* 프로필의 놀이터: 유치원(한글) / 초등 */
+    if (!s.hg || typeof s.hg !== 'object') s.hg = {};   /* 한글 놀이터 진행 (hangul.js 가 채운다) */
     if (!(s.sel >= 2 && s.sel <= 9)) s.sel = 2;
     s.custom = inRange(Array.isArray(s.custom) ? s.custom : [2, 3, 4], 2, 9);
     if (s.tab !== 'as' && s.tab !== 'ml' && s.tab !== 'ph') s.tab = 'mul';
@@ -567,6 +572,8 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   var voice = null, voiceWantPreload = false, voiceSeq = 0, nyBusy = null, nyGreetedTab = '';
   var touched = false;   /* 이 페이지를 연 뒤 한 번이라도 눌렀는가. 누르기 전에는 브라우저가 소리를 막는다 */
   var ph = null;           /* 파닉스 놀이터 (phonics.js) */
+  var hg = null;           /* 한글 놀이터 (hangul.js) */
+  var newCategory = 'elementary';   /* 프로필 추가 폼에서 고른 놀이터 종류 */
   var SYNC = { timer: 0, inflight: false, again: false, p: null, bad: false };
   var AQ = [];            /* 아직 서버로 보내지 않은 풀이 기록 */
   var AFLY = false;
@@ -578,7 +585,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     var v = lsJson(PKEY + pid);
     return v && v.progress && typeof v.at === 'number' ? v : null;
   }
-  function progressOf(s) { var c = JSON.parse(JSON.stringify(s)); delete c.sound; return c; }
+  function progressOf(s) { var c = JSON.parse(JSON.stringify(s)); delete c.sound; delete c.category; return c; }
   function setSyncMsg(bad) {
     SYNC.bad = !!bad;
     var el = document.getElementById('syncErr');
@@ -588,7 +595,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   /* 진행 상황을 바꿀 때마다 부른다. 기기에 먼저 적어 두고, 잠시 뒤 서버로 올린다. */
   function save() {
     if (!profile) return;
-    lsSet(PKEY + profile.id, JSON.stringify({ at: Date.now(), progress: progressOf(store), settings: { sound: store.sound } }));
+    lsSet(PKEY + profile.id, JSON.stringify({ at: Date.now(), progress: progressOf(store), settings: { sound: store.sound, category: store.category } }));
     clearTimeout(SYNC.timer);
     SYNC.timer = setTimeout(pushState, 1200);
   }
@@ -848,13 +855,18 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     if (ph) ph.leave();
     if (S) { clearTimeout(S.timer); stopTimer(); S.locked = true; }
     flushAttempts();
-    setHue(store.sel);
+    var kids = store.category === 'kids';
+    setHue(kids ? 4 : store.sel);
     document.querySelector('[data-slot="snd"]').innerHTML = sndBtn();
     document.querySelector('[data-slot="acct"]').innerHTML = profile
-      ? '<button class="btn small" data-act="profiles" aria-label="프로필 바꾸기">' + esc(profile.name) + ' ▾</button><button class="btn small" data-act="dash" aria-label="활동 기록 보기">📊 기록</button><span class="syncerr" id="syncErr" hidden>저장하지 못했어요. 다시 시도하고 있어요.</span>'
+      ? '<button class="btn small" data-act="profiles" aria-label="프로필 바꾸기">' + esc(profile.name) + ' ▾</button>' + (kids ? '' : '<button class="btn small" data-act="dash" aria-label="활동 기록 보기">📊 기록</button>') + '<button class="btn small" data-act="cat" data-arm="" aria-label="놀이터 종류 바꾸기">' + (kids ? '유치원' : '초등') + ' ⇄</button><span class="syncerr" id="syncErr" hidden>저장하지 못했어요. 다시 시도하고 있어요.</span>'
       : '';
     setSyncMsg(SYNC.bad);
     paintTabs();
+    if (kids) {
+      if (hg) hg.renderHome(); else $('#hgHome').innerHTML = '<p class="msg">한글 놀이터를 불러오지 못했어요. 새로고침해 주세요.</p>';
+      show('home'); return;
+    }
     if (store.tab === 'as') { renderAS(); show('home'); return; }
     if (store.tab === 'ml') { renderML(); show('home'); return; }
     if (store.tab === 'ph') {
@@ -1233,7 +1245,15 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
   }
 
   function paintTabs() {
-    var t = store.tab;
+    var t = store.tab, kids = store.category === 'kids';
+    $('#tabs').hidden = kids;
+    $('#hgHome').hidden = !kids;
+    if (kids) {
+      $('#mulHome').hidden = $('#asHome').hidden = $('#mlHome').hidden = $('#phHome').hidden = true;
+      $('#homeTitle').textContent = '한글 놀이터';
+      $('#homeSub').textContent = '그림을 누르고 낱말을 들어 보세요.';
+      return;
+    }
     $('#tab-mul').setAttribute('aria-pressed', String(t === 'mul'));
     $('#tab-as').setAttribute('aria-pressed', String(t === 'as'));
     $('#tab-ml').setAttribute('aria-pressed', String(t === 'ml'));
@@ -1814,6 +1834,20 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     else if (act === 'dash') openDashboard('home');
     else if (act === 'dash-profiles') openDashboard('profiles');
     else if (act === 'prof-add') addProfile();
+    else if (act === 'cat') {
+      /* 놀이터 종류를 바꾼다. 아이가 잘못 눌러도 바뀌지 않도록 두 번 눌러야 한다 */
+      if (t.dataset.arm === '1') { store.category = store.category === 'kids' ? 'elementary' : 'kids'; save(); renderHome(); }
+      else {
+        t.dataset.arm = '1'; t.textContent = (store.category === 'kids' ? '초등' : '유치원') + '으로 바꾸기?';
+        setTimeout(function () { if (t.isConnected && t.dataset.arm === '1') { t.dataset.arm = ''; t.textContent = (store.category === 'kids' ? '유치원' : '초등') + ' ⇄'; } }, 4000);
+      }
+    }
+    else if (act === 'cat-pick') {
+      var cp = document.querySelectorAll('[data-act="cat-pick"]');
+      for (var ci = 0; ci < cp.length; ci++) cp[ci].setAttribute('aria-pressed', String(cp[ci] === t));
+      newCategory = t.dataset.cat;
+      var impBox = $('#profImport'); if (impBox) impBox.closest('label').style.display = newCategory === 'kids' ? 'none' : '';
+    }
     else if (act === 'home') renderHome();
     else if (act === 'snd') { store.sound = !store.sound; save(); if (!store.sound) hush(); paintSnd(); }
     else if (act === 'learn') startLearn(store.sel);
@@ -1961,6 +1995,9 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       ? '<p class="msg">프로필은 최대 6개까지 만들 수 있어요.</p>'
       : '<h3>프로필 추가</h3><input class="field" id="profName" maxlength="12" autocomplete="off" placeholder="이름이나 별명" aria-label="프로필 이름">' +
         '<p class="msg" style="margin:0;font-size:.9rem">실명 대신 별명을 써도 돼요.</p>' +
+        '<div class="tabs" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:0" role="group" aria-label="놀이터 고르기">' +
+          '<button class="tab" type="button" data-act="cat-pick" data-cat="kids" aria-pressed="' + (newCategory === 'kids') + '">🌱 유치원 (한글)</button>' +
+          '<button class="tab" type="button" data-act="cat-pick" data-cat="elementary" aria-pressed="' + (newCategory !== 'kids') + '">🎒 초등</button></div>' +
         (canImport ? '<label class="check"><input type="checkbox" id="profImport" checked><span>이 기기에 저장돼 있던 진행 상황(별 ' + (+readLegacy().stars || 0) + '개)을 이 프로필로 가져오기</span></label>' : '') +
         '<button class="btn primary wide" data-act="prof-add">추가하기</button>';
     $('#profiles').innerHTML =
@@ -2018,6 +2055,7 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       var src = useServer ? row : pend;
       var next = Object.assign({}, src && src.progress);
       next.sound = !(src && src.settings && src.settings.sound === false);
+      next.category = src && src.settings && src.settings.category === 'kids' ? 'kids' : 'elementary';
       profile = p; SYNC.bad = false;
       store = normalize(next);
       AQ = lsJson(AKEY + p.id) || [];
@@ -2052,19 +2090,20 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
     if (!name) return showProfiles('이름을 입력해 주세요.');
     if (name.length > 12) return showProfiles('이름은 12자까지 쓸 수 있어요.');
     if (profiles.some(function (p) { return p.name === name; })) return showProfiles('같은 이름의 프로필이 이미 있어요.');
-    var imp = $('#profImport'), doImport = !!(imp && imp.checked);
+    var imp = $('#profImport'), cat = newCategory, doImport = !!(imp && imp.checked) && cat !== 'kids';
     return Promise.resolve(sb.from('profiles').insert({ name: name }).select('id,name').single()).then(function (r) {
       if (r.error) throw r.error;
       profiles.push(r.data);
+      newCategory = 'elementary';
+      /* 고른 놀이터 종류를 먼저 저장해 두고 프로필을 연다 */
+      profile = r.data;
       if (doImport) {
-        var old = readLegacy();
-        profile = r.data;
-        store = normalize(JSON.parse(JSON.stringify(old)));
+        store = normalize(JSON.parse(JSON.stringify(readLegacy())));
         lsSet(IKEY, '1');
-        save();
-        return pushState().then(function () { return selectProfile(r.data); });
-      }
-      return selectProfile(r.data);
+      } else store = normalize(freshStore());
+      store.category = cat;
+      save();
+      return pushState().then(function () { return selectProfile(r.data); });
     }).catch(function () { showProfiles('프로필을 만들지 못했어요. 잠시 뒤에 다시 해 주세요.'); });
   }
 
@@ -2144,6 +2183,15 @@ window.GUGUDAN_CONFIG = { supabaseUrl: 'https://vrfttzzaalvhuwmaxvoe.supabase.co
       save: save, show: show, setHue: setHue, sndBtn: sndBtn, tone: tone, esc: esc, starSvg: starSvg,
       nyRow: nyRow, nyPick: nyPick, nyVoice: nyVoice, nyGreet: nyGreet, stopVoice: function () { if (voice) voice.stop(); },
       goHome: renderHome, logAnswer: logPhonics
+    });
+  }
+
+  /* 한글 놀이터는 hangul.js 가 화면을 맡고, 앱은 저장과 소리를 빌려준다 */
+  if (window.createHangul) {
+    hg = window.createHangul({
+      getStore: function () { return store; }, save: save, esc: esc, speak: speak,
+      hear: function (text) { var was = store.sound; store.sound = true; speak(text); store.sound = was; },   /* 소리를 꺼 둬도 눌러서 듣는 건 들려준다 */
+      stop: hush
     });
   }
 
