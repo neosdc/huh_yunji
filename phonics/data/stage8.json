@@ -1,0 +1,616 @@
+{
+  "stage": 8,
+  "title": "a_e i_e o_e u_e",
+  "mainGames": [
+    "B",
+    "C"
+  ],
+  "sounds": [
+    {
+      "id": "a_long",
+      "ipa": "/eɪ/",
+      "audio": "audio/phonemes/a_long.mp3",
+      "hint": "ay"
+    },
+    {
+      "id": "i_long",
+      "ipa": "/aɪ/",
+      "audio": "audio/phonemes/i_long.mp3",
+      "hint": "eye"
+    },
+    {
+      "id": "o_long",
+      "ipa": "/oʊ/",
+      "audio": "audio/phonemes/o_long.mp3",
+      "hint": "oh"
+    },
+    {
+      "id": "u_long",
+      "ipa": "/juː/",
+      "audio": "audio/phonemes/u_long.mp3",
+      "hint": "yoo"
+    }
+  ],
+  "letters": [
+    {
+      "g": "a_e",
+      "sound": "a_long"
+    },
+    {
+      "g": "i_e",
+      "sound": "i_long"
+    },
+    {
+      "g": "o_e",
+      "sound": "o_long"
+    },
+    {
+      "g": "u_e",
+      "sound": "u_long"
+    }
+  ],
+  "words": [
+    {
+      "word": "cake",
+      "tiles": [
+        "c",
+        "a",
+        "k",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "a_long",
+        "k",
+        null
+      ],
+      "audio": "audio/words/cake.mp3",
+      "emoji": "🎂"
+    },
+    {
+      "word": "make",
+      "tiles": [
+        "m",
+        "a",
+        "k",
+        "e"
+      ],
+      "sounds": [
+        "m",
+        "a_long",
+        "k",
+        null
+      ],
+      "audio": "audio/words/make.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "game",
+      "tiles": [
+        "g",
+        "a",
+        "m",
+        "e"
+      ],
+      "sounds": [
+        "g",
+        "a_long",
+        "m",
+        null
+      ],
+      "audio": "audio/words/game.mp3",
+      "emoji": "🎮"
+    },
+    {
+      "word": "cape",
+      "tiles": [
+        "c",
+        "a",
+        "p",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "a_long",
+        "p",
+        null
+      ],
+      "audio": "audio/words/cape.mp3",
+      "emoji": "🦸"
+    },
+    {
+      "word": "tape",
+      "tiles": [
+        "t",
+        "a",
+        "p",
+        "e"
+      ],
+      "sounds": [
+        "t",
+        "a_long",
+        "p",
+        null
+      ],
+      "audio": "audio/words/tape.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "name",
+      "tiles": [
+        "n",
+        "a",
+        "m",
+        "e"
+      ],
+      "sounds": [
+        "n",
+        "a_long",
+        "m",
+        null
+      ],
+      "audio": "audio/words/name.mp3",
+      "emoji": "📛"
+    },
+    {
+      "word": "late",
+      "tiles": [
+        "l",
+        "a",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "l",
+        "a_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/late.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "lake",
+      "tiles": [
+        "l",
+        "a",
+        "k",
+        "e"
+      ],
+      "sounds": [
+        "l",
+        "a_long",
+        "k",
+        null
+      ],
+      "audio": "audio/words/lake.mp3",
+      "emoji": "🏞️"
+    },
+    {
+      "word": "gate",
+      "tiles": [
+        "g",
+        "a",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "g",
+        "a_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/gate.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bike",
+      "tiles": [
+        "b",
+        "i",
+        "k",
+        "e"
+      ],
+      "sounds": [
+        "b",
+        "i_long",
+        "k",
+        null
+      ],
+      "audio": "audio/words/bike.mp3",
+      "emoji": "🚲"
+    },
+    {
+      "word": "time",
+      "tiles": [
+        "t",
+        "i",
+        "m",
+        "e"
+      ],
+      "sounds": [
+        "t",
+        "i_long",
+        "m",
+        null
+      ],
+      "audio": "audio/words/time.mp3",
+      "emoji": "⏰"
+    },
+    {
+      "word": "five",
+      "tiles": [
+        "f",
+        "i",
+        "v",
+        "e"
+      ],
+      "sounds": [
+        "f",
+        "i_long",
+        "v",
+        null
+      ],
+      "audio": "audio/words/five.mp3",
+      "emoji": "5️⃣"
+    },
+    {
+      "word": "kite",
+      "tiles": [
+        "k",
+        "i",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "i_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/kite.mp3",
+      "emoji": "🪁"
+    },
+    {
+      "word": "pine",
+      "tiles": [
+        "p",
+        "i",
+        "n",
+        "e"
+      ],
+      "sounds": [
+        "p",
+        "i_long",
+        "n",
+        null
+      ],
+      "audio": "audio/words/pine.mp3",
+      "emoji": "🌲"
+    },
+    {
+      "word": "nine",
+      "tiles": [
+        "n",
+        "i",
+        "n",
+        "e"
+      ],
+      "sounds": [
+        "n",
+        "i_long",
+        "n",
+        null
+      ],
+      "audio": "audio/words/nine.mp3",
+      "emoji": "9️⃣"
+    },
+    {
+      "word": "hide",
+      "tiles": [
+        "h",
+        "i",
+        "d",
+        "e"
+      ],
+      "sounds": [
+        "h",
+        "i_long",
+        "d",
+        null
+      ],
+      "audio": "audio/words/hide.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "ride",
+      "tiles": [
+        "r",
+        "i",
+        "d",
+        "e"
+      ],
+      "sounds": [
+        "r",
+        "i_long",
+        "d",
+        null
+      ],
+      "audio": "audio/words/ride.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bite",
+      "tiles": [
+        "b",
+        "i",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "b",
+        "i_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/bite.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "line",
+      "tiles": [
+        "l",
+        "i",
+        "n",
+        "e"
+      ],
+      "sounds": [
+        "l",
+        "i_long",
+        "n",
+        null
+      ],
+      "audio": "audio/words/line.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "mile",
+      "tiles": [
+        "m",
+        "i",
+        "l",
+        "e"
+      ],
+      "sounds": [
+        "m",
+        "i_long",
+        "l",
+        null
+      ],
+      "audio": "audio/words/mile.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "home",
+      "tiles": [
+        "h",
+        "o",
+        "m",
+        "e"
+      ],
+      "sounds": [
+        "h",
+        "o_long",
+        "m",
+        null
+      ],
+      "audio": "audio/words/home.mp3",
+      "emoji": "🏠"
+    },
+    {
+      "word": "bone",
+      "tiles": [
+        "b",
+        "o",
+        "n",
+        "e"
+      ],
+      "sounds": [
+        "b",
+        "o_long",
+        "n",
+        null
+      ],
+      "audio": "audio/words/bone.mp3",
+      "emoji": "🦴"
+    },
+    {
+      "word": "nose",
+      "tiles": [
+        "n",
+        "o",
+        "s",
+        "e"
+      ],
+      "sounds": [
+        "n",
+        "o_long",
+        "z",
+        null
+      ],
+      "audio": "audio/words/nose.mp3",
+      "emoji": "👃"
+    },
+    {
+      "word": "hope",
+      "tiles": [
+        "h",
+        "o",
+        "p",
+        "e"
+      ],
+      "sounds": [
+        "h",
+        "o_long",
+        "p",
+        null
+      ],
+      "audio": "audio/words/hope.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "note",
+      "tiles": [
+        "n",
+        "o",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "n",
+        "o_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/note.mp3",
+      "emoji": "📝"
+    },
+    {
+      "word": "rope",
+      "tiles": [
+        "r",
+        "o",
+        "p",
+        "e"
+      ],
+      "sounds": [
+        "r",
+        "o_long",
+        "p",
+        null
+      ],
+      "audio": "audio/words/rope.mp3",
+      "emoji": "🪢"
+    },
+    {
+      "word": "hole",
+      "tiles": [
+        "h",
+        "o",
+        "l",
+        "e"
+      ],
+      "sounds": [
+        "h",
+        "o_long",
+        "l",
+        null
+      ],
+      "audio": "audio/words/hole.mp3",
+      "emoji": "🕳️"
+    },
+    {
+      "word": "joke",
+      "tiles": [
+        "j",
+        "o",
+        "k",
+        "e"
+      ],
+      "sounds": [
+        "j",
+        "o_long",
+        "k",
+        null
+      ],
+      "audio": "audio/words/joke.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "cone",
+      "tiles": [
+        "c",
+        "o",
+        "n",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "o_long",
+        "n",
+        null
+      ],
+      "audio": "audio/words/cone.mp3",
+      "emoji": "🍦"
+    },
+    {
+      "word": "rose",
+      "tiles": [
+        "r",
+        "o",
+        "s",
+        "e"
+      ],
+      "sounds": [
+        "r",
+        "o_long",
+        "z",
+        null
+      ],
+      "audio": "audio/words/rose.mp3",
+      "emoji": "🌹"
+    },
+    {
+      "word": "cube",
+      "tiles": [
+        "c",
+        "u",
+        "b",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "u_long",
+        "b",
+        null
+      ],
+      "audio": "audio/words/cube.mp3",
+      "emoji": "🧊"
+    },
+    {
+      "word": "cute",
+      "tiles": [
+        "c",
+        "u",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "k",
+        "u_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/cute.mp3",
+      "emoji": "🥰"
+    },
+    {
+      "word": "mute",
+      "tiles": [
+        "m",
+        "u",
+        "t",
+        "e"
+      ],
+      "sounds": [
+        "m",
+        "u_long",
+        "t",
+        null
+      ],
+      "audio": "audio/words/mute.mp3",
+      "emoji": "🔇"
+    }
+  ],
+  "sightWords": []
+}
