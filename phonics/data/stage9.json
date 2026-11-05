@@ -7,23 +7,15 @@
   ],
   "sounds": [
     {
-      "id": "a_long",
-      "ipa": "/eɪ/",
-      "audio": "audio/phonemes/a_long.mp3",
-      "hint": "ay"
-    },
-    {
       "id": "e_long",
       "ipa": "/iː/",
       "audio": "audio/phonemes/e_long.mp3",
       "hint": "ee"
-    },
-    {
-      "id": "o_long",
-      "ipa": "/oʊ/",
-      "audio": "audio/phonemes/o_long.mp3",
-      "hint": "oh"
     }
+  ],
+  "relearn": [
+    "a_long",
+    "o_long"
   ],
   "letters": [
     {

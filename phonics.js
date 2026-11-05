@@ -81,9 +81,16 @@
           else SND[l.sound].graphemes.push(l.g);
           LET[l.g] = l.sound; LETSTAGE[l.g] = n;
         });
+        (st.relearn || []).forEach(function (id) {
+          if (!SND[id]) errs.push('relearn: 알 수 없는 소리 ' + id + ' (' + n + '단계)');
+        });
         (st.words || []).forEach(function (w) {
           if (WORDS[w.word]) errs.push('단어 중복: ' + w.word + ' (' + n + '단계)');
           if ((w.tiles || []).join('') !== w.word) errs.push('단어 ' + w.word + ': tiles 를 이으면 철자와 같아야 합니다');
+          if (w.sounds) {
+            if (w.sounds.length !== (w.tiles || []).length) errs.push('단어 ' + w.word + ': sounds 개수가 tiles 와 같아야 합니다');
+            w.sounds.forEach(function (id) { if (id !== null && !SND[id]) errs.push('단어 ' + w.word + ': 알 수 없는 소리 ' + id); });
+          }
           (w.tiles || []).forEach(function (t) {
             if (!(t in LET)) errs.push('단어 ' + w.word + ': 글자 ' + t + ' 가 letters 에 없습니다');
             else if (LETSTAGE[t] > n) errs.push('단어 ' + w.word + ': 글자 ' + t + ' 는 아직 배우지 않았습니다 (' + LETSTAGE[t] + '단계)');
@@ -101,7 +108,19 @@
     function upto(n, map) { return values(map).filter(function (x) { return x.stage <= n; }); }
     function stageOf(n) { return STAGES.filter(function (s) { return s.stage === n; })[0]; }
     function soundOfLetter(g) { return SND[LET[g]]; }
-    function soundLabel(id) { return SND[id].graphemes.join(' · '); }
+    /* 소리의 철자 목록. stage 를 주면 그 단계까지 배운 철자만 (a_long 의 ai 는 9단계에서야 나온다) */
+    function graphemesOf(id, stage) {
+      var list = SND[id].graphemes;
+      return stage ? list.filter(function (g) { return LETSTAGE[g] <= stage; }) : list;
+    }
+    function soundLabel(id, stage) { return graphemesOf(id, stage).join(' · '); }
+    /* 단어 안에서 i번째 타일이 내는 소리. 단어 데이터의 sounds 배열이 우선하고(null 은 소리 없는 글자),
+       없으면 글자의 기본 소리다. 마법의 e 처럼 같은 글자가 단어에 따라 달리 읽힐 때 쓴다. 소리 없으면 null */
+    function tileSound(w, i) {
+      if (w.sounds && w.sounds[i] !== undefined) return w.sounds[i] === null ? null : SND[w.sounds[i]];
+      return soundOfLetter(w.tiles[i]);
+    }
+    function saySound(snd) { return snd ? sayItem(snd, 'sound') : Promise.resolve(); }
 
     /* ---------- 진행 상태 (앱의 store.ph, 프로필별로 서버에 저장됨) ----------
        items: "p:m"(소리) "w:sat"(단어 만들기) "c:sat"(소리 합치기) "s:the"(사이트 워드) → [연속 정답, 틀린 횟수]
@@ -249,9 +268,11 @@
     function poolsFor(stage, kind) {
       var all = kind === 'A' ? values(SND) : kind === 'D' ? values(SIGHT) : values(WORDS);
       var key = function (x) { return kind === 'A' ? x.id : x.word; };
+      var re = kind === 'A' ? ((stageOf(stage) || {}).relearn || []) : [];   /* 앞 단계에서 배운 소리를 새 철자로 다시 배우는 경우 */
+      var isFresh = function (x) { return x.stage === stage || re.indexOf(x.id) >= 0; };
       return {
-        fresh: all.filter(function (x) { return x.stage === stage; }).map(key),
-        review: all.filter(function (x) { return x.stage < stage; }).map(key)
+        fresh: all.filter(isFresh).map(key),
+        review: all.filter(function (x) { return x.stage < stage && !isFresh(x); }).map(key)
       };
     }
     function sightPoolSize(stage) { return upto(stage, SIGHT).length; }
@@ -357,7 +378,7 @@
         usedIpa[SND[x].ipa] = true;
         return true;
       }).slice(0, CFG.optionCount - 1);
-      var opts = shuffle([target.id].concat(others)).map(function (id) { return { id: id, g: randOf(SND[id].graphemes) }; });
+      var opts = shuffle([target.id].concat(others)).map(function (id) { return { id: id, g: randOf(graphemesOf(id, g.stage)) }; });
       body().innerHTML =
         '<p class="ph-prompt">소리를 듣고 알맞은 글자를 골라요</p>' +
         '<button class="ph-speaker" data-ph="spk" aria-label="소리 듣기">🔊</button>' +
@@ -391,7 +412,7 @@
         sfxNo();
         miss(entry);
         cards('.ph-card').forEach(function (b) { if (b.dataset.phv === entry.key) b.classList.add('hint'); });
-        msg('이 소리는 ' + soundLabel(entry.key) + ' 예요');
+        msg('이 소리는 ' + soundLabel(entry.key, g.stage) + ' 예요');
         flow = sleep(500).then(function () {
           if (!alive(g)) return;
           return sayItem(snd, 'sound').then(function () { return sleep(500); });   /* 정답 소리 다시 들려주고 넘어감 */
@@ -407,7 +428,7 @@
       var ipaOf = function (g) { return SND[LET[g]].ipa; };   /* c, k, ck 처럼 발음 기호가 같으면 같은 소리로 본다 */
       var needSounds = {};
       need.forEach(function (g) { needSounds[ipaOf(g)] = true; });
-      var pool = Object.keys(LET).filter(function (g) { return LETSTAGE[g] <= stage && need.indexOf(g) < 0 && !needSounds[ipaOf(g)]; });
+      var pool = Object.keys(LET).filter(function (g) { return LETSTAGE[g] <= stage && g.indexOf('_') < 0 && need.indexOf(g) < 0 && !needSounds[ipaOf(g)]; });   /* a_e 같은 짝 패턴은 타일이 아니다 */
       var extra = [], used = Object.assign({}, needSounds);
       shuffle(pool).forEach(function (g) {                   /* 섞는 글자끼리도 같은 소리(c/k/ck)가 겹치지 않게 */
         if (extra.length >= CFG.extraTiles) return;
@@ -449,7 +470,8 @@
       drawSlots();
       stopAudio();
       var t = seq;
-      var sayP = sayItem(soundOfLetter(letter), 'sound');       /* 글자 이름이 아니라 그 글자의 소리 */
+      var at = g.fill.length - 1;     /* 이 글자가 놓인 칸: 단어가 그 칸의 소리를 따로 정했으면 그 소리(a_long, 소리 없는 e)를 들려준다 */
+      var sayP = saySound(letter === w.tiles[at] ? tileSound(w, at) : soundOfLetter(letter));       /* 글자 이름이 아니라 그 글자의 소리 */
       if (g.fill.length === w.tiles.length) {
         g.locked = true;
         sayP.then(function () {
@@ -469,7 +491,7 @@
           return Promise.resolve(t === seq);
         }
         marks.forEach(function (m, j) { m.classList.toggle('lit', j === i); });
-        return sayItem(soundOfLetter(w.tiles[i]), 'sound').then(function () {
+        return saySound(tileSound(w, i)).then(function () {
           if (t !== seq) return false;
           return sleep(200).then(function () { i++; return step(); });
         });
@@ -609,7 +631,7 @@
       var sk = g.stage + ':' + g.kind, p = P();
       if (stars > (p.stars[sk] || 0)) p.stars[sk] = stars;
       host.save();
-      var label = function (k) { return g.kind === 'A' ? soundLabel(k) : k; };
+      var label = function (k) { return g.kind === 'A' ? soundLabel(k, g.stage) : k; };
       var uniq = g.missed.filter(function (x, i, a) { return a.indexOf(x) === i; });
       var line = host.nyPick(NY_PH['s' + stars]);
       frame(GAME_META[g.kind].name, 'stage', '← ' + g.stage + '단계', false);
@@ -702,7 +724,7 @@
         }).join('') + '</div>' +
         '<div class="card box ph-mastery">' +
           '<h3>이번 단계 소리 (3번 연속 정답이면 숙달)</h3>' +
-          '<div class="ph-mrow">' + st.sounds.map(function (s) { return chip('p:' + s.id, soundLabel(s.id)); }).join('') + '</div>' +
+          '<div class="ph-mrow">' + st.sounds.concat((st.relearn || []).map(function (id) { return SND[id]; })).map(function (s) { return chip('p:' + s.id, soundLabel(s.id, n)); }).join('') + '</div>' +
           '<h3>단어 숙달 ' + wordsMastered + ' / ' + words.length + '</h3>' +
           (sights.length ? '<h3>사이트 워드</h3><div class="ph-mrow">' + sights.map(function (s) { return chip('s:' + s.word, s.word); }).join('') + '</div>' : '') +
         '</div>';
