@@ -1,0 +1,402 @@
+{
+  "stage": 9,
+  "title": "ai ay ee ea oa ow",
+  "mainGames": [
+    "A",
+    "B"
+  ],
+  "sounds": [
+    {
+      "id": "a_long",
+      "ipa": "/eɪ/",
+      "audio": "audio/phonemes/a_long.mp3",
+      "hint": "ay"
+    },
+    {
+      "id": "e_long",
+      "ipa": "/iː/",
+      "audio": "audio/phonemes/e_long.mp3",
+      "hint": "ee"
+    },
+    {
+      "id": "o_long",
+      "ipa": "/oʊ/",
+      "audio": "audio/phonemes/o_long.mp3",
+      "hint": "oh"
+    }
+  ],
+  "letters": [
+    {
+      "g": "ai",
+      "sound": "a_long"
+    },
+    {
+      "g": "ay",
+      "sound": "a_long"
+    },
+    {
+      "g": "ee",
+      "sound": "e_long"
+    },
+    {
+      "g": "ea",
+      "sound": "e_long"
+    },
+    {
+      "g": "oa",
+      "sound": "o_long"
+    },
+    {
+      "g": "ow",
+      "sound": "o_long"
+    }
+  ],
+  "words": [
+    {
+      "word": "rain",
+      "tiles": [
+        "r",
+        "ai",
+        "n"
+      ],
+      "audio": "audio/words/rain.mp3",
+      "emoji": "🌧️"
+    },
+    {
+      "word": "tail",
+      "tiles": [
+        "t",
+        "ai",
+        "l"
+      ],
+      "audio": "audio/words/tail.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "train",
+      "tiles": [
+        "t",
+        "r",
+        "ai",
+        "n"
+      ],
+      "audio": "audio/words/train.mp3",
+      "emoji": "🚂"
+    },
+    {
+      "word": "wait",
+      "tiles": [
+        "w",
+        "ai",
+        "t"
+      ],
+      "audio": "audio/words/wait.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "mail",
+      "tiles": [
+        "m",
+        "ai",
+        "l"
+      ],
+      "audio": "audio/words/mail.mp3",
+      "emoji": "📬"
+    },
+    {
+      "word": "day",
+      "tiles": [
+        "d",
+        "ay"
+      ],
+      "audio": "audio/words/day.mp3",
+      "emoji": "☀️"
+    },
+    {
+      "word": "play",
+      "tiles": [
+        "p",
+        "l",
+        "ay"
+      ],
+      "audio": "audio/words/play.mp3",
+      "emoji": "🎮"
+    },
+    {
+      "word": "say",
+      "tiles": [
+        "s",
+        "ay"
+      ],
+      "audio": "audio/words/say.mp3",
+      "emoji": "🗣️"
+    },
+    {
+      "word": "stay",
+      "tiles": [
+        "s",
+        "t",
+        "ay"
+      ],
+      "audio": "audio/words/stay.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "tray",
+      "tiles": [
+        "t",
+        "r",
+        "ay"
+      ],
+      "audio": "audio/words/tray.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "bee",
+      "tiles": [
+        "b",
+        "ee"
+      ],
+      "audio": "audio/words/bee.mp3",
+      "emoji": "🐝"
+    },
+    {
+      "word": "see",
+      "tiles": [
+        "s",
+        "ee"
+      ],
+      "audio": "audio/words/see.mp3",
+      "emoji": "👀"
+    },
+    {
+      "word": "tree",
+      "tiles": [
+        "t",
+        "r",
+        "ee"
+      ],
+      "audio": "audio/words/tree.mp3",
+      "emoji": "🌳"
+    },
+    {
+      "word": "feet",
+      "tiles": [
+        "f",
+        "ee",
+        "t"
+      ],
+      "audio": "audio/words/feet.mp3",
+      "emoji": "🦶"
+    },
+    {
+      "word": "seed",
+      "tiles": [
+        "s",
+        "ee",
+        "d"
+      ],
+      "audio": "audio/words/seed.mp3",
+      "emoji": "🌱"
+    },
+    {
+      "word": "keep",
+      "tiles": [
+        "k",
+        "ee",
+        "p"
+      ],
+      "audio": "audio/words/keep.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "green",
+      "tiles": [
+        "g",
+        "r",
+        "ee",
+        "n"
+      ],
+      "audio": "audio/words/green.mp3",
+      "emoji": "🟢"
+    },
+    {
+      "word": "sheep",
+      "tiles": [
+        "sh",
+        "ee",
+        "p"
+      ],
+      "audio": "audio/words/sheep.mp3",
+      "emoji": "🐑"
+    },
+    {
+      "word": "sea",
+      "tiles": [
+        "s",
+        "ea"
+      ],
+      "audio": "audio/words/sea.mp3",
+      "emoji": "🌊"
+    },
+    {
+      "word": "tea",
+      "tiles": [
+        "t",
+        "ea"
+      ],
+      "audio": "audio/words/tea.mp3",
+      "emoji": "🍵"
+    },
+    {
+      "word": "leaf",
+      "tiles": [
+        "l",
+        "ea",
+        "f"
+      ],
+      "audio": "audio/words/leaf.mp3",
+      "emoji": "🍃"
+    },
+    {
+      "word": "seat",
+      "tiles": [
+        "s",
+        "ea",
+        "t"
+      ],
+      "audio": "audio/words/seat.mp3",
+      "emoji": "💺"
+    },
+    {
+      "word": "team",
+      "tiles": [
+        "t",
+        "ea",
+        "m"
+      ],
+      "audio": "audio/words/team.mp3",
+      "emoji": "👥"
+    },
+    {
+      "word": "beach",
+      "tiles": [
+        "b",
+        "ea",
+        "ch"
+      ],
+      "audio": "audio/words/beach.mp3",
+      "emoji": "🏝️"
+    },
+    {
+      "word": "boat",
+      "tiles": [
+        "b",
+        "oa",
+        "t"
+      ],
+      "audio": "audio/words/boat.mp3",
+      "emoji": "⛵"
+    },
+    {
+      "word": "coat",
+      "tiles": [
+        "c",
+        "oa",
+        "t"
+      ],
+      "audio": "audio/words/coat.mp3",
+      "emoji": "🧥"
+    },
+    {
+      "word": "road",
+      "tiles": [
+        "r",
+        "oa",
+        "d"
+      ],
+      "audio": "audio/words/road.mp3",
+      "emoji": "🛣️"
+    },
+    {
+      "word": "goat",
+      "tiles": [
+        "g",
+        "oa",
+        "t"
+      ],
+      "audio": "audio/words/goat.mp3",
+      "emoji": "🐐"
+    },
+    {
+      "word": "soap",
+      "tiles": [
+        "s",
+        "oa",
+        "p"
+      ],
+      "audio": "audio/words/soap.mp3",
+      "emoji": "🧼"
+    },
+    {
+      "word": "toad",
+      "tiles": [
+        "t",
+        "oa",
+        "d"
+      ],
+      "audio": "audio/words/toad.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "snow",
+      "tiles": [
+        "s",
+        "n",
+        "ow"
+      ],
+      "audio": "audio/words/snow.mp3",
+      "emoji": "❄️"
+    },
+    {
+      "word": "grow",
+      "tiles": [
+        "g",
+        "r",
+        "ow"
+      ],
+      "audio": "audio/words/grow.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "slow",
+      "tiles": [
+        "s",
+        "l",
+        "ow"
+      ],
+      "audio": "audio/words/slow.mp3",
+      "emoji": "🐌"
+    },
+    {
+      "word": "show",
+      "tiles": [
+        "sh",
+        "ow"
+      ],
+      "audio": "audio/words/show.mp3",
+      "emoji": ""
+    },
+    {
+      "word": "blow",
+      "tiles": [
+        "b",
+        "l",
+        "ow"
+      ],
+      "audio": "audio/words/blow.mp3",
+      "emoji": "💨"
+    }
+  ],
+  "sightWords": []
+}
