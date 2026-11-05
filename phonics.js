@@ -9,6 +9,7 @@
     base: 'phonics/',
     dataBase: 'phonics/data/',
     questionsPerRound: 10,   /* 한 판 문제 수 */
+    pairQuestions: 8,        /* 짝 바꾸기 게임은 짝 수만큼 */
     sightQuestions: 6,       /* 사이트 워드 게임은 짧게 */
     reviewRatio: 0.3,        /* 이전 단계 항목 비율 */
     masteryStreak: 3,        /* 연속 3회 정답 = 숙달 */
@@ -23,7 +24,8 @@
     A: { name: '소리 듣고 고르기', desc: '들려주는 소리에 맞는 글자를 찾아요', icon: '🔊', hue: 7, prefix: 'p:' },
     B: { name: '단어 만들기',     desc: '단어를 듣고 글자 타일로 만들어요',   icon: '🧩', hue: 8, prefix: 'w:' },
     C: { name: '소리 합치기',     desc: '소리를 이어 듣고 단어를 찾아요',     icon: '🔗', hue: 5, prefix: 'c:' },
-    D: { name: '사이트 워드',     desc: '소리 내어 읽는 단어를 찾아요',       icon: '👀', hue: 3, prefix: 's:' }
+    D: { name: '사이트 워드',     desc: '소리 내어 읽는 단어를 찾아요',       icon: '👀', hue: 3, prefix: 's:' },
+    E: { name: '짝 바꾸기',       desc: 'e를 붙이면 소리가 바뀌어요',         icon: '✨', hue: 6, prefix: 'e:' }   /* pairs 가 있는 단계에만 열린다 */
   };
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -45,6 +47,7 @@
     var LETSTAGE = {};   /* 글자 → 도입 단계 */
     var WORDS = {};      /* 단어 → {word, tiles[], audio, emoji, stage} */
     var SIGHT = {};      /* 사이트 워드 → {word, audio, hint, stage} */
+    var PAIRS = {};      /* 짧은 모음 단어 → {word, long, stage}: e 를 붙이면 긴 모음 단어가 되는 짝 (마법의 e) */
     var loadP = null, loaded = false;
 
     function fetchJson(url) {
@@ -97,10 +100,18 @@
           });
           WORDS[w.word] = Object.assign({}, w, { stage: n });
         });
+        (st.pairs || []).forEach(function (pr) {
+          if (PAIRS[pr.short]) errs.push('짝 중복: ' + pr.short + ' (' + n + '단계)');
+          PAIRS[pr.short] = { word: pr.short, long: pr.long, stage: n };
+        });
         (st.sightWords || []).forEach(function (s) {
           if (SIGHT[s.word]) errs.push('사이트 워드 중복: ' + s.word);
           SIGHT[s.word] = Object.assign({}, s, { stage: n });
         });
+      });
+      values(PAIRS).forEach(function (pr) {
+        if (!WORDS[pr.word] || !WORDS[pr.long]) errs.push('짝 ' + pr.word + ' / ' + pr.long + ': 두 단어가 모두 words 에 있어야 합니다');
+        else if (WORDS[pr.word].stage > pr.stage || WORDS[pr.long].stage > pr.stage) errs.push('짝 ' + pr.word + ' / ' + pr.long + ': 아직 배우지 않은 단어입니다');
       });
       return errs;
     }
@@ -266,7 +277,7 @@
       return items[items.length - 1];
     }
     function poolsFor(stage, kind) {
-      var all = kind === 'A' ? values(SND) : kind === 'D' ? values(SIGHT) : values(WORDS);
+      var all = kind === 'A' ? values(SND) : kind === 'D' ? values(SIGHT) : kind === 'E' ? values(PAIRS) : values(WORDS);
       var key = function (x) { return kind === 'A' ? x.id : x.word; };
       var re = kind === 'A' ? ((stageOf(stage) || {}).relearn || []) : [];   /* 앞 단계에서 배운 소리를 새 철자로 다시 배우는 경우 */
       var isFresh = function (x) { return x.stage === stage || re.indexOf(x.id) >= 0; };
@@ -287,7 +298,7 @@
       return out;
     }
     function buildQueue(stage, kind) {
-      var N = kind === 'D' ? CFG.sightQuestions : CFG.questionsPerRound;
+      var N = kind === 'D' ? CFG.sightQuestions : kind === 'E' ? CFG.pairQuestions : CFG.questionsPerRound;
       var prefix = GAME_META[kind].prefix;
       var pools = poolsFor(stage, kind);
       var nRev = pools.review.length ? Math.round(N * CFG.reviewRatio) : 0;
@@ -363,7 +374,7 @@
     function renderQuestion() {
       updateProgress();
       G.on = {};
-      ({ A: renderA, B: renderB, C: renderC, D: renderD })[G.kind]();
+      ({ A: renderA, B: renderB, C: renderC, D: renderD, E: renderE })[G.kind]();
     }
     function msg(text) { var m = byId('phMsg'); if (m) m.textContent = text; }
     function cards(sel) { return body().querySelectorAll(sel); }
@@ -595,6 +606,63 @@
       g.on.pick = function (btn) { answerWordPick(g, btn, entry, w, 'sight', '이 단어는 ' + w.word + ' 예요', false); };
       setTimeout(function () { if (alive(g) && g.queue[g.i] === entry) play(); }, 350);
     }
+    /* ---------- 게임 E: 짝 바꾸기 (마법의 e) ----------
+       cap / cape 처럼 e 를 붙이면 모음이 짧은 소리에서 긴 소리로 바뀌는 짝. 들려주는 단어를 두 철자 중에서 고르고,
+       답한 뒤에는 "cap + e → cape" 로 바뀌는 모습과 소리를 보여 준다. 그림은 답을 알려 주므로 답한 뒤에야 보인다. */
+    function renderE() {
+      var g = G, entry = g.queue[g.i], pr = PAIRS[entry.key];
+      var target = entry.which || (entry.which = randOf(['short', 'long']));
+      var w = WORDS[target === 'short' ? pr.word : pr.long];
+      var opts = shuffle([pr.word, pr.long]);
+      body().innerHTML =
+        '<p class="ph-prompt">들려주는 단어를 골라요</p>' +
+        '<button class="ph-speaker" data-ph="spk" aria-label="소리 듣기">🔊</button>' +
+        '<div class="ph-options">' + opts.map(function (o) { return '<button class="ph-card wordcard ph-en" data-ph="pick" data-phv="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>' +
+        '<div class="ph-msg" id="phMsg" aria-live="polite"></div><div class="ph-demo" id="phDemo"></div>';
+      var spk = body().querySelector('.ph-speaker');
+      var play = function () {
+        stopAudio();
+        spk.classList.add('playing');
+        return sayItem(w, 'word').then(function () { spk.classList.remove('playing'); });
+      };
+      g.on.spk = play;
+      g.on.pick = function (btn) { answerE(g, btn, entry, pr, w); };
+      setTimeout(function () { if (alive(g) && g.queue[g.i] === entry) play(); }, 350);
+    }
+    function answerE(g, btn, entry, pr, w) {
+      if (g.locked) return;
+      g.locked = true;
+      stopAudio();
+      var ok = btn.dataset.phv === w.word;
+      if (ok) {
+        btn.classList.add('ok');
+        sfxOk();
+        msg('맞아요!');
+        hit(entry);
+      } else {
+        btn.classList.add('no');
+        sfxNo();
+        miss(entry);
+        cards('.ph-card').forEach(function (b) { if (b.dataset.phv === w.word) b.classList.add('hint'); });
+        msg('이 단어는 ' + w.word + ' 예요');
+      }
+      sleep(ok ? 250 : 500).then(function () { return alive(g) ? pairDemo(g, pr) : null; }).then(function () { nextQuestion(g); });
+    }
+    /* cap 을 읽어 주고, e 가 붙으면 cape 로 바뀌며 긴 소리로 읽어 준다 */
+    function pairDemo(g, pr) {
+      var S = WORDS[pr.word], L = WORDS[pr.long], el = byId('phDemo');
+      if (!el) return Promise.resolve();
+      var cell = function (w, id, hidden) {
+        return '<div class="ph-dcell" id="' + id + '"' + (hidden ? ' hidden' : '') + '><span class="ph-pic">' + (w.emoji || '') + '</span><b class="ph-en">' + esc(w.word) + '</b></div>';
+      };
+      el.innerHTML = '<div class="ph-demo-row">' + cell(S, 'phDs', false) + '<span class="ph-plus" id="phDp" hidden>+ e →</span>' + cell(L, 'phDl', true) + '</div>';
+      var show = function (id) { var x = byId(id); if (x) x.hidden = false; };
+      return sleep(150).then(function () { return alive(g) ? sayItem(S, 'word') : null; })
+        .then(function () { return sleep(350); })
+        .then(function () { if (!alive(g)) return; show('phDp'); return sleep(450); })
+        .then(function () { if (!alive(g)) return; show('phDl'); return sayItem(L, 'word'); })
+        .then(function () { return sleep(700); });
+    }
     /* C 와 D 는 단어 카드 고르기라 정답 처리가 같다. blend: 오답일 때 소리를 이어서 다시 들려줄지(C) 그냥 다시 읽어 줄지(D) */
     function answerWordPick(g, btn, entry, w, kind, wrongMsg, blend) {
       if (g.locked) return;
@@ -703,7 +771,7 @@
       host.setHue(CFG.hue);
       frame(n + '단계', 'home', '← 처음으로', false);
       var main = st.mainGames || ['A'];
-      var kinds = main.concat(Object.keys(GAME_META).filter(function (k) { return main.indexOf(k) < 0; }));
+      var kinds = main.concat(Object.keys(GAME_META).filter(function (k) { return main.indexOf(k) < 0 && (k !== 'E' || (st.pairs || []).length); }));
       var sightOk = sightPoolSize(n) >= CFG.minSightPool;
       var chip = function (key, text) {
         var s = streakOf(key), done = s >= CFG.masteryStreak;

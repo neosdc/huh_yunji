@@ -66,6 +66,15 @@
 .ph-dots i { width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--paper-2); border: 2px solid var(--edge); transition: transform .15s; }
 .ph-dots i.lit { background: var(--h); transform: scale(1.4); }
 
+/* 게임 E (짝 바꾸기) */
+.ph-demo { min-height: 8.5rem; width: 100%; }
+.ph-demo-row { display: flex; align-items: center; justify-content: center; gap: .8rem; }
+.ph-dcell { display: flex; flex-direction: column; align-items: center; gap: .1rem; font-size: 1.9rem; animation: ph-pop .3s ease-out; }
+.ph-dcell .ph-pic { font-size: 3.2rem; min-height: 3.6rem; }
+.ph-dcell b { font-weight: 400; letter-spacing: .08em; }
+.ph-plus { font-family: var(--font-en); font-size: 1.6rem; animation: ph-pop .3s ease-out; }
+@keyframes ph-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
 /* 게임 B */
 .ph-pic { font-size: 5rem; line-height: 1; min-height: 5.5rem; display: flex; align-items: center; justify-content: center; }
 .ph-pic.none { font-size: 2.5rem; color: var(--ink-2); }
@@ -93,4 +102,5 @@
 @media (prefers-reduced-motion: reduce) {
   .ph-speaker.playing, .ph-card.no, .ph-slot.no { animation: none; }
   .ph-dots i, .ph-stage, .ph-mode { transition: none; }
+  .ph-dcell, .ph-plus { animation: none; }
 }

@@ -610,7 +610,61 @@
       ],
       "audio": "audio/words/mute.mp3",
       "emoji": "🔇"
+    },
+    {
+      "word": "hop",
+      "tiles": [
+        "h",
+        "o",
+        "p"
+      ],
+      "audio": "audio/words/hop.mp3",
+      "emoji": "🐇"
+    },
+    {
+      "word": "cut",
+      "tiles": [
+        "c",
+        "u",
+        "t"
+      ],
+      "audio": "audio/words/cut.mp3",
+      "emoji": "✂️"
     }
   ],
-  "sightWords": []
+  "sightWords": [],
+  "pairs": [
+    {
+      "short": "cap",
+      "long": "cape"
+    },
+    {
+      "short": "tap",
+      "long": "tape"
+    },
+    {
+      "short": "kit",
+      "long": "kite"
+    },
+    {
+      "short": "pin",
+      "long": "pine"
+    },
+    {
+      "short": "hop",
+      "long": "hope"
+    },
+    {
+      "short": "not",
+      "long": "note"
+    },
+    {
+      "short": "cub",
+      "long": "cube"
+    },
+    {
+      "short": "cut",
+      "long": "cute"
+    }
+  ]
 }

@@ -133,7 +133,7 @@
     stages.forEach(function (st) {
       var main = st.mainGames && st.mainGames.length ? st.mainGames : ['A'];
       var ok = main.every(function (g) { return num(stars[st.stage + ':' + g]) > 0; });
-      var any = ['A', 'B', 'C', 'D'].some(function (g) { return num(stars[st.stage + ':' + g]) > 0; });
+      var any = ['A', 'B', 'C', 'D', 'E'].some(function (g) { return num(stars[st.stage + ':' + g]) > 0; });
       if (ok) cleared++;
       out.push({ stage: st.stage, cleared: ok, started: any });
       (st.sounds || []).forEach(function (s) { sndAll++; if (mastered('p:' + s.id)) snd++; });
