@@ -181,11 +181,14 @@ create table if not exists public.ph_attempts (
   profile_id uuid not null references public.profiles (id) on delete cascade,
   played_at  timestamptz not null default now(),
   stage      int not null,
-  game       text not null check (game in ('A', 'B', 'C', 'D')),   -- 소리 고르기 / 단어 만들기 / 소리 합치기 / 사이트 워드
+  game       text not null check (game in ('A', 'B', 'C', 'D', 'E')),   -- 소리 고르기 / 단어 만들기 / 소리 합치기 / 사이트 워드 / 짝 바꾸기
   item       text not null check (char_length(item) <= 40),         -- 소리 id 또는 단어
   correct    boolean not null,
   first_try  boolean not null                                       -- 틀려서 다시 나온 문제가 아니라 처음 나온 문제인지
 );
+-- 이미 만든 테이블에는 위 check 가 다시 적용되지 않으므로, 짝 바꾸기(E)가 생긴 뒤에는 한 번 이 두 줄을 실행해야 합니다.
+alter table public.ph_attempts drop constraint if exists ph_attempts_game_check;
+alter table public.ph_attempts add constraint ph_attempts_game_check check (game in ('A', 'B', 'C', 'D', 'E'));
 create index if not exists ph_attempts_profile_time_idx on public.ph_attempts (profile_id, played_at desc);
 
 alter table public.ph_attempts enable row level security;
