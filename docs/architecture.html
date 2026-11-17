@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>구구단 놀이터 시스템 구조</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #2d3142;
+      --color-ink:     #f5f5f5;
+      --color-muted:   #bfc0c0;
+      --color-accent:  #f08a59;
+      --font-sans:     'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', 'Noto Serif KR', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 1000px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · Diagram Design</p>
+    <h1>구구단 놀이터 시스템 구조</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-dark-title architecture-dark-desc">
+        <title id="architecture-dark-title">구구단 놀이터 시스템 구조</title>
+        <desc id="architecture-dark-desc">Architecture diagram: a static host serves index.html to the browser app, which loads play modules and voice playback, and talks to Supabase Auth, Postgres with RLS, and a private Storage bucket.</desc>
+        <defs>
+          <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.9" fill="rgba(245,245,245,0.10)"/>
+          </pattern>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f08a59"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#739fdf"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#2d3142"/>
+        <rect width="100%" height="100%" fill="url(#dots)" opacity="0.55"/>
+
+        <!-- Zone: Browser -->
+        <rect x="200" y="112" width="396" height="296" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+        <rect x="212" y="106" width="64" height="12" rx="2" fill="#2d3142"/>
+        <text x="244" y="115" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">BROWSER</text>
+
+        <!-- Zone: Supabase -->
+        <rect x="676" y="112" width="284" height="296" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+        <rect x="688" y="106" width="68" height="12" rx="2" fill="#2d3142"/>
+        <text x="722" y="115" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">SUPABASE</text>
+
+        <!-- Arrows first (behind boxes) -->
+        <!-- Parent -> App -->
+        <line x1="168" y1="264" x2="424" y2="264" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Host -> App -->
+        <line x1="500" y1="84" x2="500" y2="232" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <!-- App -> Modules -->
+        <path d="M 424,248 H 408 Q 400,248 400,240 V 188 Q 400,180 392,180 H 376" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- App -> Voice -->
+        <path d="M 424,280 H 408 Q 400,280 400,288 V 340 Q 400,348 392,348 H 376" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- App -> Auth -->
+        <path d="M 576,248 H 628 Q 636,248 636,240 V 188 Q 636,180 644,180 H 700" fill="none" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <!-- App -> Postgres (headline path) -->
+        <line x1="576" y1="264" x2="700" y2="264" stroke="#f08a59" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <!-- App -> Storage -->
+        <path d="M 576,280 H 628 Q 636,280 636,288 V 340 Q 636,348 644,348 H 700" fill="none" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+
+        <!-- Arrow labels -->
+        <rect x="508" y="152" width="44" height="12" rx="2" fill="#2d3142"/>
+        <text x="530" y="161" fill="#739fdf" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LOAD</text>
+
+        <rect x="648" y="162" width="44" height="12" rx="2" fill="#2d3142"/>
+        <text x="670" y="171" fill="#739fdf" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">OAUTH</text>
+
+        <rect x="648" y="246" width="40" height="12" rx="2" fill="#2d3142"/>
+        <text x="668" y="255" fill="#f08a59" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SYNC</text>
+
+        <rect x="648" y="330" width="44" height="12" rx="2" fill="#2d3142"/>
+        <text x="670" y="339" fill="#739fdf" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">VOICE</text>
+
+        <!-- Node: Parent -->
+        <rect x="40" y="232" width="128" height="64" rx="6" fill="#2d3142"/>
+        <rect x="40" y="232" width="128" height="64" rx="6" fill="rgba(191,192,192,0.10)" stroke="#949eb2" stroke-width="1"/>
+        <rect x="48" y="240" width="32" height="12" rx="2" fill="transparent" stroke="rgba(148,158,178,0.50)" stroke-width="0.8"/>
+        <text x="64" y="249" fill="#949eb2" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">USER</text>
+        <text x="104" y="268" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">보호자 · 아이</text>
+        <text x="104" y="284" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Google account</text>
+
+        <!-- Node: Static host -->
+        <rect x="424" y="28" width="152" height="56" rx="6" fill="#2d3142"/>
+        <rect x="424" y="28" width="152" height="56" rx="6" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <rect x="432" y="36" width="32" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+        <text x="448" y="45" fill="#949eb2" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HOST</text>
+        <text x="500" y="62" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">정적 호스팅</text>
+        <text x="500" y="76" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">GitHub Pages</text>
+
+        <!-- Node: Modules -->
+        <rect x="224" y="148" width="152" height="64" rx="6" fill="#2d3142"/>
+        <rect x="224" y="148" width="152" height="64" rx="6" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <rect x="232" y="156" width="28" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.40)" stroke-width="0.8"/>
+        <text x="246" y="165" fill="#f5f5f5" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MOD</text>
+        <text x="300" y="188" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">놀이터 모듈</text>
+        <text x="300" y="204" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">phonics·hangul·dashboard</text>
+
+        <!-- Node: Voice -->
+        <rect x="224" y="316" width="152" height="64" rx="6" fill="#2d3142"/>
+        <rect x="224" y="316" width="152" height="64" rx="6" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <rect x="232" y="324" width="28" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.40)" stroke-width="0.8"/>
+        <text x="246" y="333" fill="#f5f5f5" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MOD</text>
+        <text x="300" y="356" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">음성 재생</text>
+        <text x="300" y="372" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">voice.js · manifest</text>
+
+        <!-- Node: App (focal) -->
+        <rect x="424" y="232" width="152" height="64" rx="6" fill="#2d3142"/>
+        <rect x="424" y="232" width="152" height="64" rx="6" fill="rgba(240,138,89,0.08)" stroke="#f08a59" stroke-width="1"/>
+        <rect x="432" y="240" width="28" height="12" rx="2" fill="transparent" stroke="rgba(240,138,89,0.50)" stroke-width="0.8"/>
+        <text x="446" y="249" fill="#f08a59" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">APP</text>
+        <text x="568" y="292" fill="rgba(240,138,89,0.10)" font-size="32" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">01</text>
+        <text x="500" y="268" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">index.html</text>
+        <text x="500" y="284" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">gugudan·add/sub·mul</text>
+
+        <!-- Node: Auth -->
+        <rect x="700" y="148" width="236" height="64" rx="6" fill="#2d3142"/>
+        <rect x="700" y="148" width="236" height="64" rx="6" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <rect x="708" y="156" width="32" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+        <text x="724" y="165" fill="#949eb2" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AUTH</text>
+        <text x="818" y="188" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">로그인 · 가입 승인</text>
+        <text x="818" y="204" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Google OAuth · members</text>
+
+        <!-- Node: Postgres (focal) -->
+        <rect x="700" y="232" width="236" height="64" rx="6" fill="#2d3142"/>
+        <rect x="700" y="232" width="236" height="64" rx="6" fill="rgba(240,138,89,0.08)" stroke="#f08a59" stroke-width="1"/>
+        <rect x="708" y="240" width="24" height="12" rx="2" fill="transparent" stroke="rgba(240,138,89,0.50)" stroke-width="0.8"/>
+        <text x="720" y="249" fill="#f08a59" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
+        <text x="928" y="292" fill="rgba(240,138,89,0.10)" font-size="32" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">02</text>
+        <text x="818" y="268" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">학습 데이터 (RLS)</text>
+        <text x="818" y="284" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">profile_state · attempts</text>
+
+        <!-- Node: Storage -->
+        <rect x="700" y="316" width="236" height="64" rx="6" fill="#2d3142"/>
+        <rect x="700" y="316" width="236" height="64" rx="6" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="1"/>
+        <rect x="708" y="324" width="32" height="12" rx="2" fill="transparent" stroke="rgba(191,192,192,0.50)" stroke-width="0.8"/>
+        <text x="724" y="333" fill="#bfc0c0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">FILE</text>
+        <text x="818" y="356" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">천만냥냥 음성 파일</text>
+        <text x="818" y="372" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Storage · protected-assets</text>
+
+        <!-- Legend strip -->
+        <line x1="40" y1="428" x2="960" y2="428" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+        <text x="40" y="444" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+
+        <rect x="40" y="454" width="14" height="10" rx="2" fill="rgba(240,138,89,0.08)" stroke="#f08a59" stroke-width="1"/>
+        <text x="60" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">Focal</text>
+
+        <rect x="124" y="454" width="14" height="10" rx="2" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="144" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">App module</text>
+
+        <rect x="252" y="454" width="14" height="10" rx="2" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="272" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">Hosted service</text>
+
+        <rect x="396" y="454" width="14" height="10" rx="2" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="1"/>
+        <text x="416" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">Store</text>
+
+        <rect x="480" y="454" width="14" height="10" rx="2" fill="rgba(191,192,192,0.10)" stroke="#949eb2" stroke-width="1"/>
+        <text x="500" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">User</text>
+
+        <line x1="568" y1="459" x2="592" y2="459" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <text x="600" y="462" fill="#bfc0c0" font-size="8.5" font-family="'Geist', sans-serif">HTTPS / API</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>
