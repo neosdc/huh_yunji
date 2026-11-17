@@ -242,6 +242,10 @@ update public.members set status = 'blocked', decided_at = now() where email = '
 
 ## 구조
 
+![구구단 놀이터 시스템 구조](docs/architecture.svg)
+
+보호자가 정적 호스팅에서 `index.html`을 받아 브라우저에서 앱을 실행하고, 로그인·학습 데이터·음성 파일은 Supabase가 맡습니다. 다이어그램 원본은 [docs/architecture.html](docs/architecture.html)입니다(글꼴은 Google Fonts에서 불러오므로 GitHub에서는 시스템 글꼴로 보일 수 있습니다).
+
 `index.html` 하나에 구구단·덧셈·뺄셈·곱셈의 마크업, CSS, JavaScript와 캐릭터 이미지가 들어 있습니다. 파닉스 놀이터는 `phonics.js`(게임·출제)와 `phonics.css`로 따로 두었고, 앱이 `createPhonics()`로 불러 쓰면서 저장·화면 전환·소리 버튼·풀이 기록을 빌려줍니다. 활동 기록 대시보드도 `dashboard.js`(조회·화면)와 `dashboard.css`로 따로 두었고, 앱이 `createDashboard()`로 불러 쓰면서 로그인한 계정의 프로필 목록과 화면 이동을 빌려줍니다. 탭 아이콘은 `favicon.ico`, 천만냥냥 음성 재생은 `voice.js`와 `manifest.json`으로 따로 두고, 데이터베이스 스키마는 `supabase/schema.sql`에 있습니다. 음성 파일을 만드는 도구(대본 생성, 합성, 후처리 스크립트)는 `tools/voice/`에 있고, 사용법은 그 폴더의 `README.md`를 보세요. 게임 코드는 순수 JavaScript이고, 외부 라이브러리는 로그인과 저장을 위한 `@supabase/supabase-js` 하나만 CDN(jsDelivr, 버전 고정 + SRI 해시)에서 불러옵니다.
 
 - **문제 표현:** 모든 문제를 `{a, b, op, lv}` 형태로 다룹니다. `op`는 구구단 `*`, 덧셈 `+`, 뺄셈 `-`, 곱셈 놀이터 `x`입니다. 퀴즈 진행, 타이머, 피드백, 결과 화면은 세 놀이터가 같은 엔진을 씁니다.
