@@ -74,9 +74,13 @@
     var map = {};
     (rows || []).forEach(function (r) {
       var key = keyOf(range, r.d), b = map[key] || (map[key] = {});
-      var k = b[r.k] || (b[r.k] = { n: 0, c: 0, f: 0, fc: 0, m: {} });
+      var k = b[r.k] || (b[r.k] = { n: 0, c: 0, f: 0, fc: 0, m: {}, g: {} });
       k.n += r.n; k.c += r.c; k.f += r.f; k.fc += r.fc;
       k.m[r.m] = (k.m[r.m] || 0) + r.n;
+      if (r.g != null) {   /* 단·단계별 (DB 를 아직 갱신하지 않아 g 가 없으면 비어 있다) */
+        var g = k.g[r.g] || (k.g[r.g] = { n: 0, c: 0 });
+        g.n += r.n; g.c += r.c;
+      }
     });
     return map;
   }
@@ -276,10 +280,17 @@
         if (!k || !k.n) return;
         var modes = Object.keys(k.m).map(function (m) { return (MODE_NAME[m] || m) + ' ' + k.m[m]; }).join(' · ');
         var first = k.f ? '처음에 맞힌 비율 ' + Math.round(k.fc / k.f * 100) + '%' : '';
+        var gk = Object.keys(k.g).map(Number).sort(function (x, y) { return x - y; });
+        var groups = gk.length ? '<div class="dgroups" aria-label="' + (kd.k === 'mul' ? '단별' : '단계별') + ' 맞힌 문제와 틀린 문제">' + gk.map(function (g) {
+          var v = k.g[g], wrong = v.n - v.c;
+          return '<span class="dgrp"><b>' + g + (kd.k === 'mul' ? '단' : '단계') + '</b>' +
+            '<span class="ok" aria-label="맞힌 문제 ' + v.c + '개">○ ' + v.c + '</span>' +
+            '<span class="no" aria-label="틀린 문제 ' + wrong + '개">✕ ' + wrong + '</span></span>';
+        }).join('') + '</div>' : '';
         rows += '<div class="drow" style="--c:var(--d' + kd.hue + ')">' +
           '<span class="dico" aria-hidden="true">' + kd.icon + '</span>' +
           '<span class="dname"><b>' + kd.name + '</b><small>' + esc(modes) + '</small></span>' +
-          '<span class="dcount"><b>' + k.n + '</b>문제<small>맞힌 문제 ' + k.c + (first ? ' · ' + first : '') + '</small></span></div>';
+          '<span class="dcount"><b>' + k.n + '</b>문제<small>맞힌 문제 ' + k.c + (first ? ' · ' + first : '') + '</small></span>' + groups + '</div>';
       });
       return '<div class="card box dcard"><h3>' + esc(longLabel(st.range, st.sel)) + '</h3>' +
         (tot.n
