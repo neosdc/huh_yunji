@@ -46,7 +46,7 @@
 .dsum b { font-family: var(--font-d); font-weight: 400; font-size: 1.2rem; }
 .drows { display: flex; flex-direction: column; gap: .5rem; }
 .drow {
-  display: flex; align-items: center; gap: .7rem; min-width: 0; padding: .5rem .7rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; min-width: 0; padding: .5rem .7rem;
   background: color-mix(in srgb, var(--c) 35%, var(--card)); border: 2.5px solid var(--edge); border-radius: 14px;
 }
 .dico { font-size: 1.7rem; line-height: 1; flex: none; }
@@ -72,3 +72,13 @@
 .dchip small { font-size: .72rem; color: var(--ink-2); }
 .dchip.on { background: color-mix(in srgb, var(--c) 55%, var(--card)); }
 .dchip.on small { color: var(--ink); }
+
+/* 단·단계별 맞힌 문제 / 틀린 문제 */
+.dgroups { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: .35rem; padding-top: .45rem; border-top: 2px dashed var(--grid-line); }
+.dgrp {
+  display: inline-flex; align-items: baseline; gap: .4rem; padding: .1rem .55rem; line-height: 1.4;
+  background: var(--card); border: 2px solid var(--edge); border-radius: 10px; font-size: .8rem; font-variant-numeric: tabular-nums;
+}
+.dgrp b { font-family: var(--font-d); font-weight: 400; font-size: .9rem; }
+.dgrp .ok { color: var(--ink); }
+.dgrp .no { color: var(--ink-2); }

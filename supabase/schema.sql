@@ -203,6 +203,7 @@ create policy ph_attempts_insert on public.ph_attempts for insert to authenticat
   with check (public.owns_profile(profile_id));
 
 -- 대시보드용 집계. 하루 x 놀이터 x 모드별 풀이 수를 한 번에 돌려줍니다.
+--   g: 진도율의 구분(구구단 단 / 덧셈·뺄셈·곱셈 단계 / 파닉스 단계, 없으면 null)
 --   n: 푼 문제(기록 수) / c: 맞힌 문제 / f: 처음 나온 문제 수 / fc: 처음 나온 문제 중 맞힌 수
 -- security invoker 라서 위의 RLS 가 그대로 적용됩니다. 로그인한 본인 계정의 프로필이 아니면 빈 결과가 나옵니다.
 -- 날짜는 p_tz(브라우저의 시간대) 기준으로 나눕니다.
@@ -211,12 +212,16 @@ returns jsonb
 language sql stable set search_path = public
 as $$
   with allr as (
-    select played_at, kind, mode, correct, first_try from public.attempts where profile_id = p_profile
+    -- g: 진도율의 구분. 구구단은 단(a), 덧셈·뺄셈·곱셈은 단계(level), 파닉스는 단계(stage)
+    select played_at, kind, mode, correct, first_try,
+           case when kind = 'mul' then a else nullif(level, 0) end as g
+      from public.attempts where profile_id = p_profile
     union all
-    select played_at, 'ph'::text, 'play'::text, correct, first_try from public.ph_attempts where profile_id = p_profile
+    select played_at, 'ph'::text, 'play'::text, correct, first_try, stage
+      from public.ph_attempts where profile_id = p_profile
   ),
   daily as (
-    select (played_at at time zone p_tz)::date as d, kind, mode,
+    select (played_at at time zone p_tz)::date as d, kind, mode, g,
            count(*)::int as n,
            (count(*) filter (where correct))::int as c,
            (count(*) filter (where first_try))::int as f,
@@ -224,13 +229,13 @@ as $$
     from allr
     where played_at >= now() - make_interval(days => greatest(p_days, 1) + 1)
       and (played_at at time zone p_tz)::date >= (now() at time zone p_tz)::date - greatest(p_days, 1)
-    group by 1, 2, 3
+    group by 1, 2, 3, 4
   ),
   tot as (
     select kind, count(*)::int as n, (count(*) filter (where correct))::int as c from allr group by kind
   )
   select jsonb_build_object(
-    'days', coalesce((select jsonb_agg(jsonb_build_object('d', d, 'k', kind, 'm', mode, 'n', n, 'c', c, 'f', f, 'fc', fc) order by d, kind, mode) from daily), '[]'::jsonb),
+    'days', coalesce((select jsonb_agg(jsonb_build_object('d', d, 'k', kind, 'm', mode, 'g', g, 'n', n, 'c', c, 'f', f, 'fc', fc) order by d, kind, mode, g) from daily), '[]'::jsonb),
     'totals', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'n', n, 'c', c)) from tot), '[]'::jsonb),
     'first_at', (select min(played_at) from allr),
     'last_at', (select max(played_at) from allr)
